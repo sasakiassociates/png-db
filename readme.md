@@ -8,7 +8,6 @@ png-db uses PNG files to encode large datasets for use in the browser. This is i
 ```javascript
 var db = new PngDB();
 
-
 db.addField('Id', FieldTypes.KEY);
 db.addField('Property Type', FieldTypes.TEXT);
 
