@@ -12,12 +12,10 @@ var db = new PngDB();
 db.addField('Id', FieldTypes.KEY);
 db.addField('Property Type', FieldTypes.TEXT);
 
-
 db.addRecord({
     'Id': '007',
     'Property Type': 'House',
 });
-
 
 db.save('test-db.json');
 ```
@@ -26,7 +24,6 @@ db.save('test-db.json');
 The following implementation creates a button for each field in the database that loads field data when clicked.
 ```javascript
 var db = new PngDBReader();
-
 
 db.load(`test-db.json`).then(()=> {
     Object.keys(db.fields).forEach(function (fieldName) {
