@@ -4,6 +4,43 @@ png-db uses PNG files to encode large datasets for use in the browser. This is i
 ##Installation
 `npm install --save png-db`
 
+##Creating the database (Node.js)
+```javascript
+var db = new PngDB();
+
+
+db.addField('Id', FieldTypes.KEY);
+db.addField('Property Type', FieldTypes.TEXT);
+
+
+db.addRecord({
+    'Id': '007',
+    'Property Type': 'House',
+});
+
+
+db.save('test-db.json');
+```
+
+##Reading the database (browser)
+The following implementation creates a button for each field in the database that loads field data when clicked.
+```javascript
+var db = new PngDBReader();
+
+
+db.load(`test-db.json`).then(()=> {
+    Object.keys(db.fields).forEach(function (fieldName) {
+        $('<button>').text(fieldName).appendTo($panel).click(function () {
+            db.loadField(fieldName).then(()=> {
+                db.records.forEach(function (record, i) {
+                    //refresh view of data 
+                });                
+            })
+        });
+    });
+});
+```
+
 ##Motivation
 Whereas databases and JSON files typically get large and cumbersome at around 50K records, image files of millions of pixels are routinely loaded into web pages. Each pixel of a PNG file has access to 4 channels of 8 bits (1 byte) each. We can take advantage of this to store multiple fields in a single PNG and create a large database from a handful of PNGs. 
 
