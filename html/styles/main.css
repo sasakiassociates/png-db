@@ -1,0 +1,29 @@
+body, html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #3e3e3e;
+  color: #ffffff;
+  font-family: "Open Sans", sans-serif; }
+
+.record-list {
+  margin: 10px;
+  border: 1px solid gray; }
+  .record-list .headers {
+    padding-left: 40px; }
+  .record-list .header {
+    display: inline-block;
+    width: 100px;
+    padding-left: 3px;
+    border-right: 1px solid black;
+    overflow: hidden;
+    font-weight: bold; }
+  .record-list .record {
+    display: inline-block;
+    width: 100px;
+    padding-left: 3px;
+    border-right: 1px solid black;
+    overflow: hidden;
+    font-size: 0.9em; }
+
+/*# sourceMappingURL=main.css.map */

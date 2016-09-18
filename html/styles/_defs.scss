@@ -1,0 +1,114 @@
+$pageW: 300px;
+$resultsPanelW: 200px;
+$commentPanelW: 240px;
+$panelBgColor: #F8F3E1;
+$legendSymbolW: 20px;
+$legendSymbolH: 20px;
+
+//------------core----------------
+@mixin disableSelection {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+@mixin rounded($radius: 0.5em) {
+  -webkit-border-radius: $radius;
+  -moz-border-radius: $radius;
+  border-radius: $radius;
+}
+
+@mixin roundedTop($radius: 0.5em) {
+  border-top-left-radius: $radius;
+  border-top-right-radius: $radius;
+  -webkit-border-top-left-radius: $radius;
+  -webkit-border-top-right-radius: $radius;
+  -moz-border-top-left-radius: $radius;
+  -moz-border-top-right-radius: $radius;
+}
+
+@mixin roundedLeft($radius: 0.5em) {
+  border-top-left-radius: $radius;
+  border-bottom-left-radius: $radius;
+  -webkit-border-top-left-radius: $radius;
+  -webkit-border-bottom-left-radius: $radius;
+  -moz-border-top-left-radius: $radius;
+  -moz-border-bottom-left-radius: $radius;
+}
+
+@mixin roundedRight($radius: 0.5em) {
+  border-top-right-radius: $radius;
+  border-bottom-right-radius: $radius;
+  -webkit-border-top-right-radius: $radius;
+  -webkit-border-bottom-right-radius: $radius;
+  -moz-border-top-right-radius: $radius;
+  -moz-border-bottom-right-radius: $radius;
+}
+
+
+@mixin size($w, $h) {
+  width: $w;
+  height: $h;
+}
+
+@mixin imgDiv {
+  background-repeat: no-repeat;
+}
+
+@mixin imgDivSize($w, $h) {
+  @include imgDiv;
+  width: $w;
+  height: $h;
+}
+
+@mixin imgRightDiv {
+  @include imgDiv;
+  background-position: right;
+}
+
+//--------------------------------
+@mixin thumbVote($x, $y, $w: 40px, $h: 40px) {
+  @include imgDiv;
+  background-image: url("img/thumbs.png");
+  background-repeat: no-repeat;
+  background-position: (-$x * $w) (-$y * $h);
+  width: $w;
+  height: $h;
+  opacity: 0.5;
+  &:hover {
+    opacity: 1;
+  }
+  &.toggleOn {
+    background-position: (-(1+$x) * $w) (-$y * $h);
+  }
+}
+
+//-----------Legend--------------------
+@mixin legendSymbolSize {
+  width: $legendSymbolW;
+  height: $legendSymbolH;
+}
+
+@mixin legendSymbol {
+  @include imgDiv;
+  @include legendSymbolSize;
+}
+
+@mixin mainPanel {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+@mixin navBtn {
+  @include disableSelection;
+  padding: 8px 16px;
+  border: 1px solid black;
+  background-color: white;
+  cursor: pointer;
+  font-size: 1.2em;
+  text-transform: uppercase;
+}

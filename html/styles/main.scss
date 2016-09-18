@@ -1,0 +1,44 @@
+@import 'palette';
+@import 'defs';
+
+$fieldW: 100px;
+body, html {
+  height: 100%;
+  //overflow: hidden;
+  margin: 0;
+  padding: 0;
+  background-color: $mainBackground;
+  color: $mainText;
+  font-family: "Open Sans", sans-serif;
+}
+
+.record-list {
+  margin: 10px;
+  border: 1px solid gray;
+
+  .headers {
+    padding-left: 40px;
+  }
+
+  ol {
+
+  }
+
+  .header {
+    display: inline-block;
+    width: $fieldW;
+    padding-left: 3px;
+    border-right: 1px solid black;
+    overflow: hidden;
+    font-weight: bold;
+  }
+
+  .record {
+    display: inline-block;
+    width: $fieldW;
+    padding-left: 3px;
+    border-right: 1px solid black;
+    overflow: hidden;
+    font-size: 0.9em;
+  }
+}
