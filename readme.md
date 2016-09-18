@@ -1,6 +1,9 @@
 #png-db
 png-db uses PNG files to encode large datasets for use in the browser. This is intended to be used for tools where a large amount of data needs to be displayed in the browser at one time and server-side querying is not suitable.
 
+##Installation
+`npm install --save png-db`
+
 ##Motivation
 Whereas databases and JSON files typically get large and cumbersome at around 50K records, image files of millions of pixels are routinely loaded into web pages. Each pixel of a PNG file has access to 4 channels of 8 bits (1 byte) each. We can take advantage of this to store multiple fields in a single PNG and create a large database from a handful of PNGs. 
 
@@ -44,12 +47,13 @@ Small numbers encoded this way are very efficient right now - e.g. 11 classes fo
 
 ##Metrics
 Your may results may vary, but some benchmarks for a city parcel dataset:
+```
 Records: 156132
 Saved as JSON: 21MB
 Saved as JSON (gzip): 811KB (96.1%)
 Saved as JSON (7z): 617KB (97.1%)
 Saved as PNG DB: 594KB (97.2%)
-
+```
 Note that this test did not include any unique KEY fields that must be saved as raw JSON. 
 For the same records, a list of IDs (KEY) of this format '0015304017000' take up 2.38MB as pure JSON, or 495KB GZipped.
 Not all applications will need a unique key beyond the numeric row number, so use only if needed.

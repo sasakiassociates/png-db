@@ -1,7 +1,7 @@
 {
   "name": "png-db",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "a simple database that uses PNG image compression to send large numbers of rows to the browser",
   "main": "index.js",
   "author": "Sasaki Associates",
   "repository": "https://github.com/sasakiassociates/png-db",
@@ -11,20 +11,15 @@
   },
   "devDependencies": {
     "babel-cli": "^6.14.0",
-    "async": "latest",
     "babel-loader": "^6.1.0",
     "babel-polyfill": "^6.3.14",
     "babel-preset-es2015": "^6.1.18",
     "copy-webpack-plugin": "^0.2.0",
-    "fs-extra": "^0.26.7",
-    "node-sass": "^3.4.2",
     "webpack": "^1.12.6",
     "webpack-dev-server": "^1.12.1"
   },
   "scripts": {
-    "build": "webpack",
-    "watch": "webpack --watch",
-    "start": "webpack-dev-server --hot --inline"
+    "build": "runWebpack.js"
   },
   "babel": {
     "presets": [
