@@ -75,6 +75,19 @@ export default class PngDBReader extends PngDB {
         img.src = url;
     }
 
+    loadFields(fieldNames, forceRefresh) {
+        return new Promise((resolve, reject) => {
+            var calls = [];
+            fieldNames.forEach(function (fieldName, i) {
+                calls.push(this.loadField(fieldName, forceRefresh));
+            });
+            Promise.all(calls)
+                .then(function (results) {
+                    resolve();
+                });
+        });
+    }
+
     loadField(fieldName, forceRefresh) {
         if (!this.url) throw 'Please load the database first';
         var field = this.fields[fieldName];

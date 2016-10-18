@@ -12,7 +12,7 @@ db.addField('Lat', FieldTypes.DECIMAL, latLonPrecision);//allow Lat/Lon to be st
 db.addField('Lon', FieldTypes.DECIMAL, latLonPrecision);
 
 var fs = require("fs");
-var dataDir = 'C:\\Users\\Ken\\Google Drive\\Transfer\\GIS\\Denver\\';
+var dataDir = './';
 var parcels = JSON.parse(fs.readFileSync(dataDir + 'parcel_points.geojson', 'utf-8'));
 
 // var baseCoord = [Number.MAX_VALUE, Number.MAX_VALUE];
