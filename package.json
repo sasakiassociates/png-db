@@ -1,6 +1,6 @@
 {
   "name": "png-db",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "a simple database that uses PNG image compression to send large numbers of rows to the browser",
   "main": "index.js",
   "author": "Sasaki Associates",
