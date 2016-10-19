@@ -37,6 +37,17 @@ db.load(`test-db.json`).then(()=> {
 });
 ```
 
+##Field Properties
+The following metadata is stored for each field when the database is saved
+```javascript
+var fieldMetaData = db.fields['numberField'];
+fieldMetaData.range.min; // Minimum value stored in this field
+fieldMetaData.range.max; // Maximum value stored in this field
+
+var fieldMetaData = db.fields['numberField'];
+fieldMetaData.uniqueValues; //An array of all text values stored in this field
+```
+
 ##Motivation
 Whereas databases and JSON files typically get large and cumbersome at around 50K records, image files of millions of pixels are routinely loaded into web pages. Each pixel of a PNG file has access to 4 channels of 8 bits (1 byte) each. We can take advantage of this to store multiple fields in a single PNG and create a large database from a handful of PNGs. 
 

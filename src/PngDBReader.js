@@ -78,7 +78,7 @@ export default class PngDBReader extends PngDB {
     loadFields(fieldNames, forceRefresh) {
         return new Promise((resolve, reject) => {
             var calls = [];
-            fieldNames.forEach(function (fieldName, i) {
+            fieldNames.forEach((fieldName, i) => {
                 calls.push(this.loadField(fieldName, forceRefresh));
             });
             Promise.all(calls)
