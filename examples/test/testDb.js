@@ -1,5 +1,5 @@
 import PngDBWriter from "../../src/PngDBWriter";
-import FieldTypes from "../../src/FieldType";
+import FieldTypes from "../../src/FieldTypes";
 
 var latLonPrecision = 1000;
 

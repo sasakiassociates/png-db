@@ -1,4 +1,4 @@
-import FieldTypes from "./FieldType";
+import FieldTypes from "./FieldTypes";
 import PngDB from "./PngDB";
 
 // var getPixels = require("get-pixels");

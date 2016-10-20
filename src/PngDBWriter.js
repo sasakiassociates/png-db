@@ -1,5 +1,5 @@
 var fs = require("fs");
-import FieldTypes from "./FieldType";
+import FieldTypes from "./FieldTypes";
 import PngDB from "./PngDB";
 
 'use strict';

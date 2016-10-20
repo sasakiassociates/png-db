@@ -1,4 +1,4 @@
-import FieldTypes from "./FieldType";
+import FieldTypes from "./FieldTypes";
 
 'use strict';
 /**
