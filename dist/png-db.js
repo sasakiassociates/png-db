@@ -697,6 +697,7 @@ var PngDBWriter = function (_PngDB) {
 
 exports.PngDBReader = PngDBReader;
 exports.PngDBWriter = PngDBWriter;
+exports.FieldTypes = FieldTypes;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

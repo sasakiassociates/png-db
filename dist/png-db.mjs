@@ -689,5 +689,5 @@ var PngDBWriter = function (_PngDB) {
     return PngDBWriter;
 }(PngDB);
 
-export { PngDBReader, PngDBWriter };
+export { PngDBReader, PngDBWriter, FieldTypes };
 //# sourceMappingURL=png-db.mjs.map
