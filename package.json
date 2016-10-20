@@ -2,11 +2,11 @@
   "name": "png-db",
   "version": "1.5.0",
   "description": "a simple database that uses PNG image compression to send large numbers of rows to the browser",
-  "main": "version/node/dist/png-db.js",
-  "module": "version/node/dist/png-db.es.js",
-  "jsnext:main": "version/node/dist/png-db.es.js",
+  "main": "versions/node/dist/png-db.js",
+  "module": "versions/node/dist/png-db.es.js",
+  "jsnext:main": "versions/node/dist/png-db.es.js",
   "jspm": {
-    "main": "version/client/dist/png-db.es.js"
+    "main": "versions/client/dist/png-db.es.js"
   },
   "author": "Sasaki Associates",
   "repository": "https://github.com/sasakiassociates/png-db",
