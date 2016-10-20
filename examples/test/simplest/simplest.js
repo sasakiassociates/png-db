@@ -1,7 +1,7 @@
-import PngDB from "../../src/PngDB";
-import FieldTypes from "../../src/FieldTypes";
+import PngDBWriter from "../../../src/PngDBWriter";
+import FieldTypes from "../../../src/FieldTypes";
 
-var db = new PngDB();
+var db = new PngDBWriter();
 db.addField('Id', FieldTypes.KEY);
 db.addField('Property Type', FieldTypes.TEXT);
 
@@ -14,4 +14,4 @@ db.addRecord({
     'Property Type': 'House',
 });
 
-db.save();
+db.save('../data/simplest.json');

@@ -1,4 +1,5 @@
 var fs = require("fs");
+var path = require("path");
 import FieldTypes from "./FieldTypes";
 import PngDB from "./PngDB";
 
@@ -15,6 +16,8 @@ export default class PngDBWriter extends PngDB {
     save(saveAs) {
         var size = this.records.length;
         var pxSize = Math.ceil(Math.sqrt(size));
+
+        var dir = path.dirname(saveAs);
 
         console.log(`Saving ${size} records (width = ${pxSize})`);
 
@@ -58,26 +61,26 @@ export default class PngDBWriter extends PngDB {
         Object.keys(this.fields).forEach((fieldName) => {
             var field = this.fields[fieldName];
             if (field.type === FieldTypes.KEY.name) {
-                this.writeKeyData(fieldName, field);
+                this.writeKeyData(dir, fieldName, field);
             } else {
-                this.writePngData(fieldName, field, pxSize);
+                this.writePngData(dir, fieldName, field, pxSize);
             }
         });
     }
 
-    writeKeyData(fieldName, field) {
+    writeKeyData(dir, fieldName, field) {
         var recordKeys = [];
         var fileName = `${fieldName}.json`;
         this.records.forEach(function (record, i) {
             recordKeys.push(record[fieldName]);
         });
-        fs.writeFile(fileName, JSON.stringify(recordKeys), (err) => {
+        fs.writeFile(path.join(dir, fileName), JSON.stringify(recordKeys), (err) => {
             if (err) throw err;
             console.log('Saved ' + fileName);
         });
     }
 
-    writePngData(fieldName, field, pxSize) {
+    writePngData(dir, fieldName, field, pxSize) {
         var Jimp = require("jimp");
         new Jimp(pxSize, pxSize, (err, image) => {
             var i = 0;
@@ -117,7 +120,7 @@ export default class PngDBWriter extends PngDB {
                 }
             }
             var fileName = `${fieldName}.png`;
-            image.write(fileName);
+            image.write(path.join(dir, fileName));
             console.log(`${fileName} saved`);
         });
     }
