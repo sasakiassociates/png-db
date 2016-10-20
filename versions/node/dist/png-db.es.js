@@ -243,13 +243,24 @@ var FieldTypes = function () {
     }], [{
         key: 'isNumeric',
         value: function isNumeric(name) {
-            return name === FieldTypes.TINYINT.name || name === FieldTypes.SMALLINT.name || name === FieldTypes.MEDIUMINT.name || name === FieldTypes.DECIMAL.name || name === FieldTypes.INT.name;
+            return name === FieldTypes.TINYINT.name || name === FieldTypes.INTEGER.name || name === FieldTypes.DECIMAL.name;
         }
     }]);
     return FieldTypes;
 }();
 
+/**
+ * KEY values are stored as a flat JSON array with no compression. Use sparingly.
+ * @type {FieldTypes}
+ */
+
+
 FieldTypes.KEY = new FieldTypes('KEY');
+
+/**
+ * TEXT values are stored as indexed values using an integer. The index (text strings for each integer) is stored in the main json file. Don't use this for primary keys or other values that don't repeat much.
+ * @type {FieldTypes}
+ */
 FieldTypes.TEXT = new FieldTypes('TEXT');
 
 /**
@@ -259,28 +270,10 @@ FieldTypes.TEXT = new FieldTypes('TEXT');
 FieldTypes.DECIMAL = new FieldTypes('DECIMAL');
 
 /**
- * (1 byte) up to 256 values
- * @type {FieldTypes}
- */
-FieldTypes.TINYINT = new FieldTypes('TINYINT');
-
-/**
- * (2 bytes) up to 65,535 values (2 smallints can be encoded in 1 PNG)
- * @type {FieldTypes}
- */
-FieldTypes.SMALLINT = new FieldTypes('SMALLINT');
-
-/**
  * (3 bytes) up to 16,777,215 values
  * @type {FieldTypes}
  */
-FieldTypes.MEDIUMINT = new FieldTypes('MEDIUMINT');
-
-/**
- * (4 bytes) up to 4,294,967,295 values (large values supported, but uses entire PNG)
- * @type {FieldTypes}
- */
-FieldTypes.INT = new FieldTypes('INT');
+FieldTypes.INTEGER = new FieldTypes('INTEGER');
 
 /**
  * Node.js class for writing databases
@@ -536,6 +529,7 @@ var PngDBReader = function (_PngDB) {
 }(PngDB);
 
 var fs = require("fs");
+var path = require("path");
 /**
  * Node.js class for writing databases
  */
@@ -555,6 +549,8 @@ var PngDBWriter = function (_PngDB) {
 
             var size = this.records.length;
             var pxSize = Math.ceil(Math.sqrt(size));
+
+            var dir = path.dirname(saveAs);
 
             console.log("Saving " + size + " records (width = " + pxSize + ")");
 
@@ -598,28 +594,28 @@ var PngDBWriter = function (_PngDB) {
             Object.keys(this.fields).forEach(function (fieldName) {
                 var field = _this2.fields[fieldName];
                 if (field.type === FieldTypes.KEY.name) {
-                    _this2.writeKeyData(fieldName, field);
+                    _this2.writeKeyData(dir, fieldName, field);
                 } else {
-                    _this2.writePngData(fieldName, field, pxSize);
+                    _this2.writePngData(dir, fieldName, field, pxSize);
                 }
             });
         }
     }, {
         key: "writeKeyData",
-        value: function writeKeyData(fieldName, field) {
+        value: function writeKeyData(dir, fieldName, field) {
             var recordKeys = [];
             var fileName = fieldName + ".json";
             this.records.forEach(function (record, i) {
                 recordKeys.push(record[fieldName]);
             });
-            fs.writeFile(fileName, JSON.stringify(recordKeys), function (err) {
+            fs.writeFile(path.join(dir, fileName), JSON.stringify(recordKeys), function (err) {
                 if (err) throw err;
                 console.log('Saved ' + fileName);
             });
         }
     }, {
         key: "writePngData",
-        value: function writePngData(fieldName, field, pxSize) {
+        value: function writePngData(dir, fieldName, field, pxSize) {
             var _this3 = this;
 
             var Jimp = require("jimp");
@@ -661,7 +657,7 @@ var PngDBWriter = function (_PngDB) {
                     }
                 }
                 var fileName = fieldName + ".png";
-                image.write(fileName);
+                image.write(path.join(dir, fileName));
                 console.log(fileName + " saved");
             });
         }
