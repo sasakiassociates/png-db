@@ -112,3 +112,7 @@ This database is designed to be written using Node.js and read in the browser. C
 Rollup is used to package the files in a future-proof way. You can use the npm installed package as usual with any ES5 project or target the ES6 modules directly using the jsnext:main file (dist/png-db.mjs)
 
 For use with ES6 modules on the client side, we recommended bundling with jspm.
+
+```
+jspm install npm:png-db
+```

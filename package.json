@@ -5,6 +5,9 @@
   "main": "dist/png-db.js",
   "module": "dist/png-db.mjs",
   "jsnext:main": "dist/png-db.mjs",
+  "jspm": {
+    "main": "dist/png-db.mjs"
+  },
   "author": "Sasaki Associates",
   "repository": "https://github.com/sasakiassociates/png-db",
   "license": "MIT",
