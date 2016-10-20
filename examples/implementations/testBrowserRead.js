@@ -1,4 +1,4 @@
-import PngDBReader from "../PngDBReader";
+import PngDBReader from "../../src/PngDBReader";
 "use strict";
 
 var dir = '../dist/test';

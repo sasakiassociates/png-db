@@ -108,5 +108,7 @@ Browsers can read PNG images up to 3 megapixels. Therefore the maximum #rows sup
 ##Repository Structure
 This database is designed to be written using Node.js and read in the browser. Code is written in ES6 and transpiled.
 
-The dist folder is used for compiled Node.js code (and built directly from Babel, keeping modules in separate files)
-The build folder is for the browser (and packaged using WebPack)
+###Working with ES6
+Rollup is used to package the files in a future-proof way. You can use the npm installed package as usual with any ES5 project or target the ES6 modules directly using the jsnext:main file (dist/png-db.mjs)
+
+For use with ES6 modules on the client side, we recommended bundling with jspm.

@@ -1,5 +1,5 @@
-import PngDB from "../PngDB";
-import FieldTypes from "../FieldType";
+import PngDB from "../../src/PngDB";
+import FieldTypes from "../../src/FieldType";
 
 var db = new PngDB();
 db.addField('Id', FieldTypes.KEY);
