@@ -7,7 +7,7 @@ var db = new PngDBWriter();
 db.addField('Id', FieldTypes.KEY);
 db.addField('LU Type', FieldTypes.TEXT);
 db.addField('Property Type', FieldTypes.TEXT);
-db.addField('# Units', FieldTypes.SMALLINT);
+db.addField('# Units', FieldTypes.INTEGER);
 db.addField('Lat', FieldTypes.DECIMAL, latLonPrecision);//allow Lat/Lon to be stored as integers (pretty cool how reducing precision reduces file size in the PNG)
 db.addField('Lon', FieldTypes.DECIMAL, latLonPrecision);
 
