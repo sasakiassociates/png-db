@@ -1,0 +1,11 @@
+{
+  "main": "dist/png-db.js",
+  "module": "dist/png-db.es.js",
+  "jsnext:main": "dist/png-db.es.js",
+  "jspm": {
+    "main": "dist/png-db.es.js"
+  },
+  "dependencies": {
+    "jimp": "^0.2.27"
+  }
+}
