@@ -9,8 +9,7 @@ class FieldTypes {
     }
 
     static isNumeric(name) {
-        return name === FieldTypes.TINYINT.name
-            || name === FieldTypes.INTEGER.name
+        return name === FieldTypes.INTEGER.name
             || name === FieldTypes.DECIMAL.name;
     }
 }

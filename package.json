@@ -26,7 +26,7 @@
     "rollup-watch": "^2.5.0"
   },
   "scripts": {
-    "build": "versions/node/rollup -c"
+    "build": "node rollup.js"
   },
   "babel": {
     "presets": [

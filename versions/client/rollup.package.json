@@ -1,7 +1,0 @@
-{
-  "main": "dist/png-db.js",
-  "module": "dist/png-db.es.js",
-  "jsnext:main": "dist/png-db.es.js",
-  "dependencies": {
-  }
-}

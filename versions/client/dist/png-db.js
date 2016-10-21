@@ -1,8 +1,6 @@
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (factory((global.pngDb = global.pngDb || {})));
-}(this, (function (exports) { 'use strict';
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
 
 var asyncGenerator = function () {
   function AwaitValue(value) {
@@ -117,10 +115,6 @@ var asyncGenerator = function () {
   };
 }();
 
-
-
-
-
 var classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
     throw new TypeError("Cannot call a class as a function");
@@ -145,37 +139,6 @@ var createClass = function () {
   };
 }();
 
-
-
-
-
-
-
-var get = function get(object, property, receiver) {
-  if (object === null) object = Function.prototype;
-  var desc = Object.getOwnPropertyDescriptor(object, property);
-
-  if (desc === undefined) {
-    var parent = Object.getPrototypeOf(object);
-
-    if (parent === null) {
-      return undefined;
-    } else {
-      return get(parent, property, receiver);
-    }
-  } else if ("value" in desc) {
-    return desc.value;
-  } else {
-    var getter = desc.get;
-
-    if (getter === undefined) {
-      return undefined;
-    }
-
-    return getter.call(receiver);
-  }
-};
-
 var inherits = function (subClass, superClass) {
   if (typeof superClass !== "function" && superClass !== null) {
     throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
@@ -192,46 +155,12 @@ var inherits = function (subClass, superClass) {
   if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
 };
 
-
-
-
-
-
-
-
-
-
-
 var possibleConstructorReturn = function (self, call) {
   if (!self) {
     throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
   }
 
   return call && (typeof call === "object" || typeof call === "function") ? call : self;
-};
-
-
-
-var set = function set(object, property, value, receiver) {
-  var desc = Object.getOwnPropertyDescriptor(object, property);
-
-  if (desc === undefined) {
-    var parent = Object.getPrototypeOf(object);
-
-    if (parent !== null) {
-      set(parent, property, value, receiver);
-    }
-  } else if ("value" in desc && desc.writable) {
-    desc.value = value;
-  } else {
-    var setter = desc.set;
-
-    if (setter !== undefined) {
-      setter.call(receiver, value);
-    }
-  }
-
-  return value;
 };
 
 var FieldTypes = function () {
@@ -249,7 +178,7 @@ var FieldTypes = function () {
     }], [{
         key: 'isNumeric',
         value: function isNumeric(name) {
-            return name === FieldTypes.TINYINT.name || name === FieldTypes.INTEGER.name || name === FieldTypes.DECIMAL.name;
+            return name === FieldTypes.INTEGER.name || name === FieldTypes.DECIMAL.name;
         }
     }]);
     return FieldTypes;
@@ -534,12 +463,6 @@ var PngDBReader = function (_PngDB) {
     return PngDBReader;
 }(PngDB);
 
-//for client side includes, we don't want to require node modules
-
 exports.PngDBReader = PngDBReader;
 exports.FieldTypes = FieldTypes;
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-})));
 //# sourceMappingURL=png-db.js.map
