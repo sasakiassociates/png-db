@@ -9,7 +9,7 @@ png-db uses PNG files to encode large datasets for use in the browser. This is i
 import { FieldTypes } from 'png-db';
 import { PngDBWriter } from 'png-db';
 
-var db = new PngDB();
+var db = new PngDBWriter();
 
 db.addField('Id', FieldTypes.KEY);
 db.addField('Property Type', FieldTypes.TEXT);
