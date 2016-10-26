@@ -12,7 +12,7 @@ export default class PngDBWriter extends PngDB {
     constructor() {
         super();
 
-        this.MAX_VALUE = 16777216;
+        this.MAX_VALUE = 256 * 256 * 256 - 1;
     }
 
     save(saveAs) {
@@ -51,7 +51,7 @@ export default class PngDBWriter extends PngDB {
         Object.keys(this.fields).forEach((k) => {
             var field = this.fields[k];
             if (field.range.max > this.MAX_VALUE) {
-                field.precision = Number.EPSILON + this.MAX_VALUE / field.range.max;
+                field.precision = (this.MAX_VALUE - 1) / field.range.max;//use -1 to prevent floating point errors exceeding
             }
         });
 
@@ -108,6 +108,8 @@ export default class PngDBWriter extends PngDB {
                         }
                         if (field.precision) {
                             value = Math.round(value * field.precision);
+                        } else {
+                            value = Math.round(value);
                         }
                         if (value > this.MAX_VALUE) {
                             throw 'Maximum value exceeded for ' + fieldName + ': ' + value;
