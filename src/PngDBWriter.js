@@ -11,6 +11,8 @@ export default class PngDBWriter extends PngDB {
 
     constructor() {
         super();
+
+        this.MAX_VALUE = 16777216;
     }
 
     save(saveAs) {
@@ -44,6 +46,13 @@ export default class PngDBWriter extends PngDB {
                     field.uniqueValues.push(value);
                 }
             });
+        });
+
+        Object.keys(this.fields).forEach((k) => {
+            var field = this.fields[k];
+            if (field.range.max > this.MAX_VALUE) {
+                field.precision = Number.EPSILON + this.MAX_VALUE / field.range.max;
+            }
         });
 
         var metaDataFile = {
@@ -100,18 +109,20 @@ export default class PngDBWriter extends PngDB {
                         if (field.precision) {
                             value = Math.round(value * field.precision);
                         }
+                        if (value > this.MAX_VALUE) {
+                            throw 'Maximum value exceeded for ' + fieldName + ': ' + value;
+                        }
                         var encodedValue = 0;
                         if (value > 255) {
+                            var r = 0;
                             var b = value % 256;
                             var g = Math.floor(value / 256);
-                            //TODO support third channel (red)
-                            //TODO resolve alpha channel
-                            //Using anything other than 255 for alpha can cause weird behavior when reading values back - we may have to settle for just 3 channels
-                            //Maybe the alpha channel becomes the way to specify NULL vs ZERO?
-                            // if (i < 10) {
-                            //     console.log(`${fieldName} ${i}: 0,${g},${b} from ${value}`);
-                            // }
-                            encodedValue = Jimp.rgbaToInt(0, g, b, 255);
+
+                            if (g > 255) {
+                                r = Math.floor(g / 256);
+                                g = g % 256;
+                            }
+                            encodedValue = Jimp.rgbaToInt(r, g, b, 255);
                         } else {
                             encodedValue = Jimp.rgbaToInt(0, 0, value, 255);
                         }

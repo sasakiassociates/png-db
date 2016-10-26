@@ -474,7 +474,11 @@ var PngDBWriter = function (_PngDB) {
 
     function PngDBWriter() {
         classCallCheck(this, PngDBWriter);
-        return possibleConstructorReturn(this, (PngDBWriter.__proto__ || Object.getPrototypeOf(PngDBWriter)).call(this));
+
+        var _this = possibleConstructorReturn(this, (PngDBWriter.__proto__ || Object.getPrototypeOf(PngDBWriter)).call(this));
+
+        _this.MAX_VALUE = 16777216;
+        return _this;
     }
 
     createClass(PngDBWriter, [{
@@ -512,6 +516,13 @@ var PngDBWriter = function (_PngDB) {
                         field.uniqueValues.push(value);
                     }
                 });
+            });
+
+            Object.keys(this.fields).forEach(function (k) {
+                var field = _this2.fields[k];
+                if (field.range.max > _this2.MAX_VALUE) {
+                    field.precision = Number.EPSILON + _this2.MAX_VALUE / field.range.max;
+                }
             });
 
             var metaDataFile = {
@@ -572,18 +583,20 @@ var PngDBWriter = function (_PngDB) {
                             if (field.precision) {
                                 value = Math.round(value * field.precision);
                             }
+                            if (value > _this3.MAX_VALUE) {
+                                throw 'Maximum value exceeded for ' + fieldName + ': ' + value;
+                            }
                             var encodedValue = 0;
                             if (value > 255) {
+                                var r = 0;
                                 var b = value % 256;
                                 var g = Math.floor(value / 256);
-                                //TODO support third channel (red)
-                                //TODO resolve alpha channel
-                                //Using anything other than 255 for alpha can cause weird behavior when reading values back - we may have to settle for just 3 channels
-                                //Maybe the alpha channel becomes the way to specify NULL vs ZERO?
-                                // if (i < 10) {
-                                //     console.log(`${fieldName} ${i}: 0,${g},${b} from ${value}`);
-                                // }
-                                encodedValue = Jimp.rgbaToInt(0, g, b, 255);
+
+                                if (g > 255) {
+                                    r = Math.floor(g / 256);
+                                    g = g % 256;
+                                }
+                                encodedValue = Jimp.rgbaToInt(r, g, b, 255);
                             } else {
                                 encodedValue = Jimp.rgbaToInt(0, 0, value, 255);
                             }
