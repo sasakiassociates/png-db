@@ -12,7 +12,7 @@ export default class PngDBWriter extends PngDB {
     constructor() {
         super();
 
-        this.MAX_VALUE = 256 * 256 * 256 - 1;
+        this.MAX_VALUE = 255 * 256 * 256 - 1;
     }
 
     save(saveAs) {
