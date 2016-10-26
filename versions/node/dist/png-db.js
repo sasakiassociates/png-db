@@ -477,7 +477,7 @@ var PngDBWriter = function (_PngDB) {
 
         var _this = possibleConstructorReturn(this, (PngDBWriter.__proto__ || Object.getPrototypeOf(PngDBWriter)).call(this));
 
-        _this.MAX_VALUE = 16777216;
+        _this.MAX_VALUE = 255 * 256 * 256 - 1;
         return _this;
     }
 
@@ -521,7 +521,7 @@ var PngDBWriter = function (_PngDB) {
             Object.keys(this.fields).forEach(function (k) {
                 var field = _this2.fields[k];
                 if (field.range.max > _this2.MAX_VALUE) {
-                    field.precision = Number.EPSILON + _this2.MAX_VALUE / field.range.max;
+                    field.precision = (_this2.MAX_VALUE - 1) / field.range.max; //use -1 to prevent floating point errors exceeding
                 }
             });
 
@@ -582,6 +582,8 @@ var PngDBWriter = function (_PngDB) {
                             }
                             if (field.precision) {
                                 value = Math.round(value * field.precision);
+                            } else {
+                                value = Math.round(value);
                             }
                             if (value > _this3.MAX_VALUE) {
                                 throw 'Maximum value exceeded for ' + fieldName + ': ' + value;
