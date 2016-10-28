@@ -77,7 +77,7 @@ export default class PngDBWriter extends PngDB {
                 }
             });
         } catch (e) {
-            console.error(e.stack);//for some reason errors aren't always reported in Node.js so we catch and report them here
+            console.error(e, e.stack);//for some reason errors aren't always reported in Node.js so we catch and report them here
         }
     }
 
@@ -116,7 +116,8 @@ export default class PngDBWriter extends PngDB {
                             value = Math.round(value);
                         }
                         if (value > this.MAX_VALUE) {
-                            throw 'Maximum value exceeded for ' + fieldName + ': ' + value;
+                            console.warn(`Maximum value exceeded for ${fieldName}: ${value} (TRUNCATED)`);
+                            value = this.MAX_VALUE;
                         }
                         var encodedValue = 0;
                         if (value > 255) {

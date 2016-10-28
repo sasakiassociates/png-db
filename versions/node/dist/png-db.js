@@ -550,7 +550,7 @@ var PngDBWriter = function (_PngDB) {
                     }
                 });
             } catch (e) {
-                console.error(e.stack); //for some reason errors aren't always reported in Node.js so we catch and report them here
+                console.error(e, e.stack); //for some reason errors aren't always reported in Node.js so we catch and report them here
             }
         }
     }, {
@@ -593,7 +593,8 @@ var PngDBWriter = function (_PngDB) {
                                 value = Math.round(value);
                             }
                             if (value > _this3.MAX_VALUE) {
-                                throw 'Maximum value exceeded for ' + fieldName + ': ' + value;
+                                console.warn("Maximum value exceeded for " + fieldName + ": " + value + " (TRUNCATED)");
+                                value = _this3.MAX_VALUE;
                             }
                             var encodedValue = 0;
                             if (value > 255) {
