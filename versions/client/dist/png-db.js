@@ -235,7 +235,10 @@ var PngDB = function () {
         key: "addField",
         value: function addField(fieldName, type, precision) {
             var ft = new FieldTypes();
-            this.fields[fieldName] = { type: type.name, precision: precision };
+            this.fields[fieldName] = { type: type.name };
+            if (precision) {
+                this.fields[fieldName].precision = precision;
+            }
         }
 
         /**

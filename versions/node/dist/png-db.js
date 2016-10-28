@@ -235,7 +235,10 @@ var PngDB = function () {
         key: "addField",
         value: function addField(fieldName, type, precision) {
             var ft = new FieldTypes();
-            this.fields[fieldName] = { type: type.name, precision: precision };
+            this.fields[fieldName] = { type: type.name };
+            if (precision) {
+                this.fields[fieldName].precision = precision;
+            }
         }
 
         /**
@@ -486,65 +489,69 @@ var PngDBWriter = function (_PngDB) {
         value: function save(saveAs) {
             var _this2 = this;
 
-            var size = this.records.length;
-            var pxSize = Math.ceil(Math.sqrt(size));
+            try {
+                var size = this.records.length;
+                var pxSize = Math.ceil(Math.sqrt(size));
 
-            var dir = path.dirname(saveAs);
+                var dir = path.dirname(saveAs);
 
-            console.log("Saving " + size + " records (width = " + pxSize + ")");
+                console.log("Saving " + size + " records (width = " + pxSize + ") ...");
 
-            Object.keys(this.fields).forEach(function (k) {
-                var field = _this2.fields[k];
-                if (field.type === FieldTypes.TEXT.name) {
-                    field.uniqueValues = [];
-                }
-                if (!FieldTypes.isNumeric(field.type)) return;
-                field.range = { min: Number.MAX_VALUE, max: -Number.MAX_VALUE };
-            });
-
-            this.records.forEach(function (record, i) {
-                Object.keys(_this2.fields).forEach(function (k) {
+                Object.keys(this.fields).forEach(function (k) {
                     var field = _this2.fields[k];
-                    var value = record[k];
-                    if (field.range) {
-                        if (typeof value !== "undefined") {
-                            field.range.min = Math.min(field.range.min, value);
-                            field.range.max = Math.max(field.range.max, value);
-                        }
+                    if (field.type === FieldTypes.TEXT.name) {
+                        field.uniqueValues = [];
                     }
-                    if (field.uniqueValues && field.uniqueValues.indexOf(value) < 0) {
-                        field.uniqueValues.push(value);
+                    if (!FieldTypes.isNumeric(field.type)) return;
+                    field.range = { min: Number.MAX_VALUE, max: -Number.MAX_VALUE };
+                });
+
+                this.records.forEach(function (record, i) {
+                    Object.keys(_this2.fields).forEach(function (k) {
+                        var field = _this2.fields[k];
+                        var value = record[k];
+                        if (field.range) {
+                            if (typeof value !== "undefined") {
+                                field.range.min = Math.min(field.range.min, value);
+                                field.range.max = Math.max(field.range.max, value);
+                            }
+                        }
+                        if (field.uniqueValues && field.uniqueValues.indexOf(value) < 0) {
+                            field.uniqueValues.push(value);
+                        }
+                    });
+                });
+
+                Object.keys(this.fields).forEach(function (k) {
+                    var field = _this2.fields[k];
+                    if (field.range && field.range.max > _this2.MAX_VALUE) {
+                        field.precision = (_this2.MAX_VALUE - 1) / field.range.max; //use -1 to prevent floating point errors exceeding
                     }
                 });
-            });
 
-            Object.keys(this.fields).forEach(function (k) {
-                var field = _this2.fields[k];
-                if (field.range.max > _this2.MAX_VALUE) {
-                    field.precision = (_this2.MAX_VALUE - 1) / field.range.max; //use -1 to prevent floating point errors exceeding
-                }
-            });
+                var metaDataFile = {
+                    metadata: this.metadata,
+                    fields: this.fields,
+                    recordCount: size,
+                    imageSize: { width: pxSize, height: pxSize }
+                };
 
-            var metaDataFile = {
-                metadata: this.metadata,
-                fields: this.fields,
-                recordCount: size,
-                imageSize: { width: pxSize, height: pxSize }
-            };
+                fs.writeFile(saveAs, JSON.stringify(metaDataFile, null, 2), function (err) {
+                    if (err) throw err;
+                    console.log('Saved ' + saveAs);
+                });
 
-            fs.writeFile(saveAs, JSON.stringify(metaDataFile, null, 2), function (err) {
-                if (err) throw err;
-                console.log('Saved ' + saveAs);
-            });
-
-            Object.keys(this.fields).forEach(function (fieldName) {
-                var field = _this2.fields[fieldName];
-                if (field.type === FieldTypes.KEY.name) {
-                    _this2.writeKeyData(dir, fieldName, field);
-                } else {
-                    _this2.writePngData(dir, fieldName, field, pxSize);
-                }
-            });
+                Object.keys(this.fields).forEach(function (fieldName) {
+                    var field = _this2.fields[fieldName];
+                    if (field.type === FieldTypes.KEY.name) {
+                        _this2.writeKeyData(dir, fieldName, field);
+                    } else {
+                        _this2.writePngData(dir, fieldName, field, pxSize);
+                    }
+                });
+            } catch (e) {
+                console.error(e.stack); //for some reason errors aren't always reported in Node.js so we catch and report them here
+            }
         }
     }, {
         key: "writeKeyData",
