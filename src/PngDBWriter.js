@@ -16,65 +16,69 @@ export default class PngDBWriter extends PngDB {
     }
 
     save(saveAs) {
-        var size = this.records.length;
-        var pxSize = Math.ceil(Math.sqrt(size));
+        try {
+            var size = this.records.length;
+            var pxSize = Math.ceil(Math.sqrt(size));
 
-        var dir = path.dirname(saveAs);
+            var dir = path.dirname(saveAs);
 
-        console.log(`Saving ${size} records (width = ${pxSize})`);
+            console.log(`Saving ${size} records (width = ${pxSize}) ...`);
 
-        Object.keys(this.fields).forEach((k) => {
-            var field = this.fields[k];
-            if (field.type === FieldTypes.TEXT.name) {
-                field.uniqueValues = [];
-            }
-            if (!FieldTypes.isNumeric(field.type)) return;
-            field.range = {min: Number.MAX_VALUE, max: -Number.MAX_VALUE};
-        });
-
-        this.records.forEach((record, i) => {
             Object.keys(this.fields).forEach((k) => {
                 var field = this.fields[k];
-                var value = record[k];
-                if (field.range) {
-                    if (typeof value !== "undefined") {
-                        field.range.min = Math.min(field.range.min, value);
-                        field.range.max = Math.max(field.range.max, value);
-                    }
+                if (field.type === FieldTypes.TEXT.name) {
+                    field.uniqueValues = [];
                 }
-                if (field.uniqueValues && field.uniqueValues.indexOf(value) < 0) {
-                    field.uniqueValues.push(value);
+                if (!FieldTypes.isNumeric(field.type)) return;
+                field.range = {min: Number.MAX_VALUE, max: -Number.MAX_VALUE};
+            });
+
+            this.records.forEach((record, i) => {
+                Object.keys(this.fields).forEach((k) => {
+                    var field = this.fields[k];
+                    var value = record[k];
+                    if (field.range) {
+                        if (typeof value !== "undefined") {
+                            field.range.min = Math.min(field.range.min, value);
+                            field.range.max = Math.max(field.range.max, value);
+                        }
+                    }
+                    if (field.uniqueValues && field.uniqueValues.indexOf(value) < 0) {
+                        field.uniqueValues.push(value);
+                    }
+                });
+            });
+
+            Object.keys(this.fields).forEach((k) => {
+                var field = this.fields[k];
+                if (field.range && field.range.max > this.MAX_VALUE) {
+                    field.precision = (this.MAX_VALUE - 1) / field.range.max;//use -1 to prevent floating point errors exceeding
                 }
             });
-        });
 
-        Object.keys(this.fields).forEach((k) => {
-            var field = this.fields[k];
-            if (field.range.max > this.MAX_VALUE) {
-                field.precision = (this.MAX_VALUE - 1) / field.range.max;//use -1 to prevent floating point errors exceeding
-            }
-        });
+            var metaDataFile = {
+                metadata: this.metadata,
+                fields: this.fields,
+                recordCount: size,
+                imageSize: {width: pxSize, height: pxSize}
+            };
 
-        var metaDataFile = {
-            metadata: this.metadata,
-            fields: this.fields,
-            recordCount: size,
-            imageSize: {width: pxSize, height: pxSize}
-        };
+            fs.writeFile(saveAs, JSON.stringify(metaDataFile, null, 2), (err) => {
+                if (err) throw err;
+                console.log('Saved ' + saveAs);
+            });
 
-        fs.writeFile(saveAs, JSON.stringify(metaDataFile, null, 2), (err) => {
-            if (err) throw err;
-            console.log('Saved ' + saveAs);
-        });
-
-        Object.keys(this.fields).forEach((fieldName) => {
-            var field = this.fields[fieldName];
-            if (field.type === FieldTypes.KEY.name) {
-                this.writeKeyData(dir, fieldName, field);
-            } else {
-                this.writePngData(dir, fieldName, field, pxSize);
-            }
-        });
+            Object.keys(this.fields).forEach((fieldName) => {
+                var field = this.fields[fieldName];
+                if (field.type === FieldTypes.KEY.name) {
+                    this.writeKeyData(dir, fieldName, field);
+                } else {
+                    this.writePngData(dir, fieldName, field, pxSize);
+                }
+            });
+        } catch (e) {
+            console.error(e.stack);//for some reason errors aren't always reported in Node.js so we catch and report them here
+        }
     }
 
     writeKeyData(dir, fieldName, field) {
