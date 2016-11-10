@@ -497,89 +497,105 @@ var PngDBWriter = function (_PngDB) {
             var _this2 = this;
 
             try {
-                var size = this.records.length;
-                var pxSize = Math.ceil(Math.sqrt(size));
+                var size;
+                var pxSize;
+                var dir;
+                var sortedValues;
+                var metaDataFile;
 
-                console.log("Saving " + size + " records (width = " + pxSize + ") ...");
+                (function () {
+                    size = _this2.records.length;
+                    pxSize = Math.ceil(Math.sqrt(size));
 
-                var dir = path.dirname(saveAs);
 
-                if (!fs.existsSync(dir)) {
-                    console.log("Making dir " + dir + " ...");
-                    fs.mkdirSync(dir);
-                }
+                    console.log("Saving " + size + " records (width = " + pxSize + ") ...");
 
-                Object.keys(this.fields).forEach(function (k) {
-                    var field = _this2.fields[k];
-                    if (field.type === FieldTypes.TEXT.name) {
-                        field.uniqueValues = [];
+                    dir = path.dirname(saveAs);
+
+
+                    if (!fs.existsSync(dir)) {
+                        console.log("Making dir " + dir + " ...");
+                        fs.mkdirSync(dir);
                     }
-                    if (!FieldTypes.isNumeric(field.type)) return;
-                    field.range = { min: Number.MAX_VALUE, max: -Number.MAX_VALUE };
-                });
 
-                var sortedValues = {};
-
-                this.records.forEach(function (record, i) {
                     Object.keys(_this2.fields).forEach(function (k) {
                         var field = _this2.fields[k];
-                        var value = record[k];
-                        if (_this2.stats.quantiles > 1) {
-                            if (!sortedValues[k]) sortedValues[k] = [];
-                            sortedValues[k].push(value);
+                        if (field.type === FieldTypes.TEXT.name) {
+                            field.uniqueValues = [];
                         }
-                        if (field.range) {
-                            if (typeof value !== "undefined") {
-                                field.range.min = Math.min(field.range.min, value);
-                                field.range.max = Math.max(field.range.max, value);
+                        if (!FieldTypes.isNumeric(field.type)) return;
+                        field.range = { min: Number.MAX_VALUE, max: -Number.MAX_VALUE };
+                    });
+
+                    sortedValues = {};
+
+
+                    _this2.records.forEach(function (record, i) {
+                        Object.keys(_this2.fields).forEach(function (k) {
+                            var field = _this2.fields[k];
+                            var value = record[k];
+                            if (_this2.stats.quantiles > 1) {
+                                if (!sortedValues[k]) sortedValues[k] = [];
+                                sortedValues[k].push(value);
+                            }
+                            if (field.range) {
+                                if (typeof value !== "undefined") {
+                                    field.range.min = Math.min(field.range.min, value);
+                                    field.range.max = Math.max(field.range.max, value);
+                                }
+                            }
+                            if (field.uniqueValues && field.uniqueValues.indexOf(value) < 0) {
+                                field.uniqueValues.push(value);
+                            }
+                        });
+                    });
+
+                    var sortNumber = function sortNumber(a, b) {
+                        return a - b;
+                    };
+
+                    Object.keys(_this2.fields).forEach(function (k) {
+                        var field = _this2.fields[k];
+                        if (field.range && field.range.max > _this2.MAX_VALUE) {
+                            field.precision = (_this2.MAX_VALUE - 1) / field.range.max; //use -1 to prevent floating point errors exceeding
+                        }
+
+                        if (field.range && _this2.stats.quantiles > 1) {
+                            sortedValues[k].sort(sortNumber);
+                            field.quantiles = [];
+                            for (var i = 1; i < _this2.stats.quantiles; i++) {
+                                var frac = i / _this2.stats.quantiles;
+                                var pos = Math.round(frac * sortedValues[k].length);
+                                field.quantiles.push({
+                                    position: 100 * frac,
+                                    value: sortedValues[k][pos]
+                                });
                             }
                         }
-                        if (field.uniqueValues && field.uniqueValues.indexOf(value) < 0) {
-                            field.uniqueValues.push(value);
+                    });
+
+                    metaDataFile = {
+                        metadata: _this2.metadata,
+                        fields: _this2.fields,
+                        recordCount: size,
+                        imageSize: { width: pxSize, height: pxSize }
+                    };
+
+
+                    fs.writeFile(saveAs, JSON.stringify(metaDataFile, null, 2), function (err) {
+                        if (err) throw err;
+                        console.log('Saved ' + saveAs);
+                    });
+
+                    Object.keys(_this2.fields).forEach(function (fieldName) {
+                        var field = _this2.fields[fieldName];
+                        if (field.type === FieldTypes.KEY.name) {
+                            _this2.writeKeyData(dir, fieldName, field);
+                        } else {
+                            _this2.writePngData(dir, fieldName, field, pxSize);
                         }
                     });
-                });
-
-                Object.keys(this.fields).forEach(function (k) {
-                    var field = _this2.fields[k];
-                    if (field.range && field.range.max > _this2.MAX_VALUE) {
-                        field.precision = (_this2.MAX_VALUE - 1) / field.range.max; //use -1 to prevent floating point errors exceeding
-                    }
-
-                    if (field.range && _this2.stats.quantiles > 1) {
-                        sortedValues[k].sort();
-                        field.quantiles = [];
-                        for (var i = 1; i < _this2.stats.quantiles; i++) {
-                            var frac = i / _this2.stats.quantiles;
-                            var pos = Math.round(frac * sortedValues[k].length);
-                            field.quantiles.push({
-                                position: 100 * frac,
-                                value: sortedValues[k][pos]
-                            });
-                        }
-                    }
-                });
-
-                var metaDataFile = {
-                    metadata: this.metadata,
-                    fields: this.fields,
-                    recordCount: size,
-                    imageSize: { width: pxSize, height: pxSize }
-                };
-
-                fs.writeFile(saveAs, JSON.stringify(metaDataFile, null, 2), function (err) {
-                    if (err) throw err;
-                    console.log('Saved ' + saveAs);
-                });
-
-                Object.keys(this.fields).forEach(function (fieldName) {
-                    var field = _this2.fields[fieldName];
-                    if (field.type === FieldTypes.KEY.name) {
-                        _this2.writeKeyData(dir, fieldName, field);
-                    } else {
-                        _this2.writePngData(dir, fieldName, field, pxSize);
-                    }
-                });
+                })();
             } catch (e) {
                 console.error(e, e.stack); //for some reason errors aren't always reported in Node.js so we catch and report them here
             }

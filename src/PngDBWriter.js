@@ -64,6 +64,10 @@ export default class PngDBWriter extends PngDB {
                 });
             });
 
+            let sortNumber = (a, b) => {
+                return a - b;
+            };
+
             Object.keys(this.fields).forEach((k) => {
                 var field = this.fields[k];
                 if (field.range && field.range.max > this.MAX_VALUE) {
@@ -71,7 +75,7 @@ export default class PngDBWriter extends PngDB {
                 }
 
                 if (field.range && this.stats.quantiles > 1) {
-                    sortedValues[k].sort();
+                    sortedValues[k].sort(sortNumber);
                     field.quantiles = [];
                     for (let i = 1; i < this.stats.quantiles; i++) {
                         let frac = i / this.stats.quantiles;
