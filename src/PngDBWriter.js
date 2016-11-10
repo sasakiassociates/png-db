@@ -9,10 +9,13 @@ import PngDB from "./PngDB";
  */
 export default class PngDBWriter extends PngDB {
 
-    constructor() {
+    constructor({quantiles = 0} = {}) {
         super();
 
         this.MAX_VALUE = 255 * 256 * 256 - 1;
+        this.stats = {
+            quantiles: quantiles//e.g. use 4 for 'quartiles' (25th percentile, 50th percentile etc)
+        };
     }
 
     save(saveAs) {
@@ -20,9 +23,15 @@ export default class PngDBWriter extends PngDB {
             var size = this.records.length;
             var pxSize = Math.ceil(Math.sqrt(size));
 
+            console.log(`Saving ${size} records (width = ${pxSize}) ...`);
+
             var dir = path.dirname(saveAs);
 
-            console.log(`Saving ${size} records (width = ${pxSize}) ...`);
+            if (!fs.existsSync(dir)){
+                console.log(`Making dir ${dir} ...`);
+                fs.mkdirSync(dir);
+            }
+
 
             Object.keys(this.fields).forEach((k) => {
                 var field = this.fields[k];
@@ -33,10 +42,16 @@ export default class PngDBWriter extends PngDB {
                 field.range = {min: Number.MAX_VALUE, max: -Number.MAX_VALUE};
             });
 
+            var sortedValues = {};
+
             this.records.forEach((record, i) => {
                 Object.keys(this.fields).forEach((k) => {
                     var field = this.fields[k];
                     var value = record[k];
+                    if (this.stats.quantiles > 1) {
+                        if (!sortedValues[k]) sortedValues[k] = [];
+                        sortedValues[k].push(value);
+                    }
                     if (field.range) {
                         if (typeof value !== "undefined") {
                             field.range.min = Math.min(field.range.min, value);
@@ -53,6 +68,19 @@ export default class PngDBWriter extends PngDB {
                 var field = this.fields[k];
                 if (field.range && field.range.max > this.MAX_VALUE) {
                     field.precision = (this.MAX_VALUE - 1) / field.range.max;//use -1 to prevent floating point errors exceeding
+                }
+
+                if (field.range && this.stats.quantiles > 1) {
+                    sortedValues[k].sort();
+                    field.quantiles = [];
+                    for (let i = 1; i < this.stats.quantiles; i++) {
+                        let frac = i / this.stats.quantiles;
+                        let pos = Math.round(frac * sortedValues[k].length);
+                        field.quantiles.push({
+                            position: 100 * frac,
+                            value: sortedValues[k][pos],
+                        });
+                    }
                 }
             });
 

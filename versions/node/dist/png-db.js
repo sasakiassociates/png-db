@@ -476,11 +476,18 @@ var PngDBWriter = function (_PngDB) {
     inherits(PngDBWriter, _PngDB);
 
     function PngDBWriter() {
+        var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+        var _ref$quantiles = _ref.quantiles;
+        var quantiles = _ref$quantiles === undefined ? 0 : _ref$quantiles;
         classCallCheck(this, PngDBWriter);
 
         var _this = possibleConstructorReturn(this, (PngDBWriter.__proto__ || Object.getPrototypeOf(PngDBWriter)).call(this));
 
         _this.MAX_VALUE = 255 * 256 * 256 - 1;
+        _this.stats = {
+            quantiles: quantiles //e.g. use 4 for 'quartiles' (25th percentile, 50th percentile etc)
+        };
         return _this;
     }
 
@@ -493,9 +500,14 @@ var PngDBWriter = function (_PngDB) {
                 var size = this.records.length;
                 var pxSize = Math.ceil(Math.sqrt(size));
 
+                console.log("Saving " + size + " records (width = " + pxSize + ") ...");
+
                 var dir = path.dirname(saveAs);
 
-                console.log("Saving " + size + " records (width = " + pxSize + ") ...");
+                if (!fs.existsSync(dir)) {
+                    console.log("Making dir " + dir + " ...");
+                    fs.mkdirSync(dir);
+                }
 
                 Object.keys(this.fields).forEach(function (k) {
                     var field = _this2.fields[k];
@@ -506,10 +518,16 @@ var PngDBWriter = function (_PngDB) {
                     field.range = { min: Number.MAX_VALUE, max: -Number.MAX_VALUE };
                 });
 
+                var sortedValues = {};
+
                 this.records.forEach(function (record, i) {
                     Object.keys(_this2.fields).forEach(function (k) {
                         var field = _this2.fields[k];
                         var value = record[k];
+                        if (_this2.stats.quantiles > 1) {
+                            if (!sortedValues[k]) sortedValues[k] = [];
+                            sortedValues[k].push(value);
+                        }
                         if (field.range) {
                             if (typeof value !== "undefined") {
                                 field.range.min = Math.min(field.range.min, value);
@@ -526,6 +544,19 @@ var PngDBWriter = function (_PngDB) {
                     var field = _this2.fields[k];
                     if (field.range && field.range.max > _this2.MAX_VALUE) {
                         field.precision = (_this2.MAX_VALUE - 1) / field.range.max; //use -1 to prevent floating point errors exceeding
+                    }
+
+                    if (field.range && _this2.stats.quantiles > 1) {
+                        sortedValues[k].sort();
+                        field.quantiles = [];
+                        for (var i = 1; i < _this2.stats.quantiles; i++) {
+                            var frac = i / _this2.stats.quantiles;
+                            var pos = Math.round(frac * sortedValues[k].length);
+                            field.quantiles.push({
+                                position: 100 * frac,
+                                value: sortedValues[k][pos]
+                            });
+                        }
                     }
                 });
 

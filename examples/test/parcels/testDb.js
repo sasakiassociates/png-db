@@ -1,9 +1,10 @@
-import PngDBWriter from "../../src/PngDBWriter";
-import FieldTypes from "../../src/FieldTypes";
+import PngDBWriter from "../../../src/PngDBWriter";
+import FieldTypes from "../../../src/FieldTypes";
 
 var latLonPrecision = 1000;
 
-var db = new PngDBWriter();
+var db = new PngDBWriter({quantiles: 8});
+// var db = new PngDBWriter();
 db.addField('Id', FieldTypes.KEY);
 db.addField('LU Type', FieldTypes.TEXT);
 db.addField('Property Type', FieldTypes.TEXT);
@@ -12,7 +13,7 @@ db.addField('Lat', FieldTypes.DECIMAL, latLonPrecision);//allow Lat/Lon to be st
 db.addField('Lon', FieldTypes.DECIMAL, latLonPrecision);
 
 var fs = require("fs");
-var dataDir = './';
+var dataDir = './data/';
 var parcels = JSON.parse(fs.readFileSync(dataDir + 'parcel_points.geojson', 'utf-8'));
 
 // var baseCoord = [Number.MAX_VALUE, Number.MAX_VALUE];
@@ -45,6 +46,6 @@ parcels.features.forEach(function (parcelFeature, i) {
 });
 
 console.log('Done adding records');
-db.save('test-db.json');
-db.saveAllRecordsAsJson('full.json');
+db.save('db/test-db.json');
+// db.saveAllRecordsAsJson('db/full.json');
 
