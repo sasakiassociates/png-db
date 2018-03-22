@@ -27,6 +27,17 @@ export default class PngDB {
     }
 
     /**
+     * Add an Array field to the database. Arrays are represented as a large images tiled together.
+     * @param {String} fieldName (any string)
+     * @param {FieldTypes} type
+     * @param {Number} [precision] - an integer
+     */
+    addArrayField(fieldName, type, precision) {
+        this.addField(fieldName, type, precision);
+        this.fields[fieldName].treatAsArray = true;
+    }
+
+    /**
      * add any metadata to be stored as JSON
      * @param {String} key
      * @param {Object} value

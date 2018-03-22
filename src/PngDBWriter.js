@@ -1,5 +1,5 @@
-var fs = require("fs");
-var path = require("path");
+const fs = require("fs");
+const path = require("path");
 import FieldTypes from "./FieldTypes";
 import PngDB from "./PngDB";
 
@@ -20,21 +20,21 @@ export default class PngDBWriter extends PngDB {
 
     save(saveAs) {
         try {
-            var size = this.records.length;
-            var pxSize = Math.ceil(Math.sqrt(size));
+            const size = this.records.length;
+            const pxSize = Math.ceil(Math.sqrt(size));
 
             console.log(`Saving ${size} records (width = ${pxSize}) ...`);
 
-            var dir = path.dirname(saveAs);
+            const dir = path.dirname(saveAs);
 
-            if (!fs.existsSync(dir)){
+            if (!fs.existsSync(dir)) {
                 console.log(`Making dir ${dir} ...`);
                 fs.mkdirSync(dir);
             }
 
 
             Object.keys(this.fields).forEach((k) => {
-                var field = this.fields[k];
+                const field = this.fields[k];
                 if (field.type === FieldTypes.TEXT.name) {
                     field.uniqueValues = [];
                 }
@@ -42,21 +42,32 @@ export default class PngDBWriter extends PngDB {
                 field.range = {min: Number.MAX_VALUE, max: -Number.MAX_VALUE};
             });
 
-            var sortedValues = {};
+            const sortedValues = {};
 
             this.records.forEach((record, i) => {
                 Object.keys(this.fields).forEach((k) => {
-                    var field = this.fields[k];
-                    var value = record[k];
+                    const field = this.fields[k];
+                    let value = record[k];
                     if (this.stats.quantiles > 1) {
                         if (!sortedValues[k]) sortedValues[k] = [];
                         sortedValues[k].push(value);
                     }
                     if (field.range) {
-                        if (typeof value !== "undefined") {
-                            field.range.min = Math.min(field.range.min, value);
-                            field.range.max = Math.max(field.range.max, value);
+                        if (field.treatAsArray) {
+                            if (value && value.length > 0) {
+                                for (let j = 0; j < value.length; j++) {
+                                    const v = value[j];
+                                    field.range.min = Math.min(field.range.min, v);
+                                    field.range.max = Math.max(field.range.max, v);
+                                }
+                            }
+                        } else {
+                            if (typeof value !== "undefined") {
+                                field.range.min = Math.min(field.range.min, value);
+                                field.range.max = Math.max(field.range.max, value);
+                            }
                         }
+
                     }
                     if (field.uniqueValues && field.uniqueValues.indexOf(value) < 0) {
                         field.uniqueValues.push(value);
@@ -69,12 +80,12 @@ export default class PngDBWriter extends PngDB {
             };
 
             Object.keys(this.fields).forEach((k) => {
-                var field = this.fields[k];
+                const field = this.fields[k];
                 if (field.range && field.range.max > this.MAX_VALUE) {
                     field.precision = (this.MAX_VALUE - 1) / field.range.max;//use -1 to prevent floating point errors exceeding
                 }
 
-                if (field.range && this.stats.quantiles > 1) {
+                if (field.range && !field.treatAsArray && this.stats.quantiles > 1) {
                     sortedValues[k].sort(sortNumber);
                     field.quantiles = [];
                     for (let i = 1; i < this.stats.quantiles; i++) {
@@ -88,25 +99,25 @@ export default class PngDBWriter extends PngDB {
                 }
             });
 
-            var metaDataFile = {
+            const metaDataFile = {
                 metadata: this.metadata,
                 fields: this.fields,
                 recordCount: size,
                 imageSize: {width: pxSize, height: pxSize}
             };
 
-            fs.writeFile(saveAs, JSON.stringify(metaDataFile, null, 2), (err) => {
-                if (err) throw err;
-                console.log('Saved ' + saveAs);
-            });
-
             Object.keys(this.fields).forEach((fieldName) => {
-                var field = this.fields[fieldName];
+                const field = this.fields[fieldName];
                 if (field.type === FieldTypes.KEY.name) {
                     this.writeKeyData(dir, fieldName, field);
                 } else {
                     this.writePngData(dir, fieldName, field, pxSize);
                 }
+            });
+
+            fs.writeFile(saveAs, JSON.stringify(metaDataFile, null, 2), (err) => {
+                if (err) throw err;
+                console.log('Saved ' + saveAs);
             });
         } catch (e) {
             console.error(e, e.stack);//for some reason errors aren't always reported in Node.js so we catch and report them here
@@ -114,8 +125,8 @@ export default class PngDBWriter extends PngDB {
     }
 
     writeKeyData(dir, fieldName, field) {
-        var recordKeys = [];
-        var fileName = `${fieldName}.json`;
+        const recordKeys = [];
+        const fileName = `${fieldName}.json`;
         this.records.forEach(function (record, i) {
             recordKeys.push(record[fieldName]);
         });
@@ -126,50 +137,99 @@ export default class PngDBWriter extends PngDB {
     }
 
     writePngData(dir, fieldName, field, pxSize) {
-        var Jimp = require("jimp");
-        new Jimp(pxSize, pxSize, (err, image) => {
-            var i = 0;
-            for (var y = 0; y < pxSize; y++) {
-                for (var x = 0; x < pxSize; x++) {
-                    var record = this.records[i++];
-                    if (record) {
-                        var value = 0;
+        const Jimp = require("jimp");
+
+        let imgSize = pxSize;
+        let numTilesEach = 0;
+        if (field.treatAsArray) {
+            let maxLen = 0;
+            for (let i = 0; i < this.records.length; i++) {
+                const record = this.records[i++];
+                const arr = record[fieldName];
+
+                if (arr != null) {
+                    if (!Array.isArray(arr)) {
+                        throw `Array value expected on record ${i}: Found ${arr}`;
+                    }
+                    maxLen = Math.max(maxLen, arr.length);
+                }
+            }
+            field.longestArray = maxLen;
+            numTilesEach = Math.ceil(Math.sqrt(maxLen));
+            imgSize = pxSize * numTilesEach;
+        }
+
+        const setPixel = (image, x, y, value) => {
+            if (field.range) {
+                value = value - field.range.min;//store the offset from the min value for smaller integers and also to allow signed values with the same methodology
+            }
+            if (field.precision) {
+                value = Math.round(value * field.precision);
+            } else {
+                value = Math.round(value);
+            }
+            if (value > this.MAX_VALUE) {
+                console.warn(`Maximum value exceeded for ${fieldName}: ${value} (TRUNCATED)`);
+                value = this.MAX_VALUE;
+            }
+            let encodedValue = 0;
+            if (value > 255) {
+                let r = 0;
+                const b = value % 256;
+                let g = Math.floor(value / 256);
+
+                if (g > 255) {
+                    r = Math.floor(g / 256);
+                    g = g % 256;
+                }
+                encodedValue = Jimp.rgbaToInt(r, g, b, 255);
+            } else {
+                encodedValue = Jimp.rgbaToInt(0, 0, value, 255);
+            }
+            image.setPixelColor(encodedValue, x, y);
+        };
+
+        new Jimp(imgSize, imgSize, (err, image) => {
+            if (field.treatAsArray) {
+
+                let i = 0;
+                for (let y = 0; y < pxSize; y++) {
+                    for (let x = 0; x < pxSize; x++) {
+                        const record = this.records[i++];
+                        if (!record) continue;
+                        const arr = record[fieldName];
+                        if (!arr) return;
+                        let a = 0;
+                        for (let ty = 0; ty < numTilesEach; ty++) {
+                            for (let tx = 0; tx < numTilesEach; tx++) {
+                                if (a < arr.length) {
+                                    const value = arr[a];
+                                    if (value !== null) {
+                                        setPixel(image, tx * pxSize + x, ty * pxSize + y, value);
+                                    }
+                                }
+                                a++;
+                            }
+                        }
+                    }
+                }
+            } else {
+                let i = 0;
+                for (let y = 0; y < pxSize; y++) {
+                    for (let x = 0; x < pxSize; x++) {
+                        const record = this.records[i++];
+                        if (!record) continue;
+                        let value = 0;
                         if (field.uniqueValues) {
                             value = field.uniqueValues.indexOf(record[fieldName]);
                         } else {
-                            value = record[fieldName]
+                            value = record[fieldName];
                         }
-                        if (field.range) {
-                            value = value - field.range.min;//store the offset from the min value for smaller integers and also to allow signed values with the same methodology
-                        }
-                        if (field.precision) {
-                            value = Math.round(value * field.precision);
-                        } else {
-                            value = Math.round(value);
-                        }
-                        if (value > this.MAX_VALUE) {
-                            console.warn(`Maximum value exceeded for ${fieldName}: ${value} (TRUNCATED)`);
-                            value = this.MAX_VALUE;
-                        }
-                        var encodedValue = 0;
-                        if (value > 255) {
-                            var r = 0;
-                            var b = value % 256;
-                            var g = Math.floor(value / 256);
-
-                            if (g > 255) {
-                                r = Math.floor(g / 256);
-                                g = g % 256;
-                            }
-                            encodedValue = Jimp.rgbaToInt(r, g, b, 255);
-                        } else {
-                            encodedValue = Jimp.rgbaToInt(0, 0, value, 255);
-                        }
-                        image.setPixelColor(encodedValue, x, y);
+                        setPixel(image, x, y, value);
                     }
                 }
             }
-            var fileName = `${fieldName}.png`;
+            const fileName = `${fieldName}.png`;
             image.write(path.join(dir, fileName));
             console.log(`${fileName} saved`);
         });
@@ -180,7 +240,7 @@ export default class PngDBWriter extends PngDB {
      * @param saveAs
      */
     saveAllRecordsAsJson(saveAs) {
-        var fullDataFile = {
+        const fullDataFile = {
             metadata: this.metadata,
             fields: this.fields,
             records: this.records

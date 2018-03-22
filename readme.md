@@ -75,6 +75,9 @@ Text values (TEXT) are also supported through an index file that references a nu
 ###Keys
 Key values (KEY) are not stored in PNG, but as a separate JSON file. There is no efficiency gained by storing values in the key field, but sometimes you need a unique value per record. Typically this is used as a primary key for each record, but you can have multiple KEY fields if absolutely necessary. Use sparingly for large datasets.
 
+###Arrays
+Support for array values is provided by tiling out the array on a grid. This is cleaner than using a separate image for each index in the array. It also compresses better and loads faster. Records can have arrays of varying length. The number of images will be equal to the longest array in the dataset. Missing values will be treated as NULL.
+
 ###Null values
 Null values are stored using the alpha channel of the PNG. Zero is stored as 0,0,0,255. Whereas NULL is stored as 0,0,0,0.
 

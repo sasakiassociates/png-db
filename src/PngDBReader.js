@@ -16,13 +16,13 @@ export default class PngDBReader extends PngDB {
     }
 
     _getDir(url) {
-        var bits = url.split('/');
+        const bits = url.split('/');
         bits.pop();
         return bits.join('/');
     }
 
     _getJSON(url) {
-        var xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         return new Promise((resolve, reject) => {
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4) {
@@ -46,7 +46,7 @@ export default class PngDBReader extends PngDB {
                 this.fields = data.fields;
                 this.imageSize = data.imageSize;
                 this.records = [];
-                for (var i = 0; i < data.recordCount; i++) {
+                for (let i = 0; i < data.recordCount; i++) {
                     this.records.push({});//empty for now, but will be populated when fields are loaded
                 }
                 resolve();
@@ -57,15 +57,15 @@ export default class PngDBReader extends PngDB {
     }
 
     loadImagePixels(url, cb) {
-        var img = new Image();
+        const img = new Image();
         img.crossOrigin = "Anonymous";
         img.onload = function () {
-            var canvas = document.createElement('canvas');
+            const canvas = document.createElement('canvas');
             canvas.width = img.width;
             canvas.height = img.height;
-            var context = canvas.getContext('2d');
+            const context = canvas.getContext('2d');
             context.drawImage(img, 0, 0);
-            var imageData = context.getImageData(0, 0, img.width, img.height);
+            const imageData = context.getImageData(0, 0, img.width, img.height);
             cb(null, imageData.data);// ndarray(new Uint8Array(pixels.data), [img.width, img.height, 4], [4, 4*img.width, 1], 0))
         };
         img.onerror = function (err) {
@@ -77,7 +77,7 @@ export default class PngDBReader extends PngDB {
 
     loadFields(fieldNames, forceRefresh) {
         return new Promise((resolve, reject) => {
-            var calls = [];
+            const calls = [];
             fieldNames.forEach((fieldName, i) => {
                 calls.push(this.loadField(fieldName, forceRefresh));
             });
@@ -90,10 +90,10 @@ export default class PngDBReader extends PngDB {
 
     loadField(fieldName, forceRefresh) {
         if (!this.url) throw 'Please load the database first';
-        var field = this.fields[fieldName];
+        let field = this.fields[fieldName];
         if (!field) throw 'Unknown field ' + fieldName;
 
-        var dir = this._getDir(this.url);
+        const dir = this._getDir(this.url);
         return new Promise((resolve, reject) => {
             if (field.dataLoaded && !forceRefresh) {
                 resolve();
@@ -101,7 +101,7 @@ export default class PngDBReader extends PngDB {
             }
             if (field.type === FieldTypes.KEY.name) {
                 this._getJSON(`${dir}/${encodeURIComponent(fieldName)}.json`).then((data) => {
-                    for (var i = 0; i < this.records.length; i++) {
+                    for (let i = 0; i < this.records.length; i++) {
                         this.records[i][fieldName] = data[i];
                     }
                     field.dataLoaded = true;
@@ -116,14 +116,16 @@ export default class PngDBReader extends PngDB {
                     reject("Bad image path: " + err);
                     return;
                 }
-                field.dataLoaded = true;
-                for (var i = 0; i < this.records.length; i++) {
-                    var pos = i * 4;
-                    var r = pixels[pos];
-                    var g = pixels[pos + 1];
-                    var b = pixels[pos + 2];
-                    // var a = pixels[pos + 3];
-                    var val = r << 16 | g << 8 | b;
+
+                const valFromPixel = (pos) => {
+                    const a = pixels[pos + 3];
+                    if (a === 0) return null;
+
+                    const r = pixels[pos];
+                    const g = pixels[pos + 1];
+                    const b = pixels[pos + 2];
+
+                    let val = r << 16 | g << 8 | b;
 
                     if (field.uniqueValues) {
                         val = field.uniqueValues[val];
@@ -136,9 +138,45 @@ export default class PngDBReader extends PngDB {
                             val += field.range.min;// we store the offset from the min value for smaller integers and also to allow signed values with the same methodology
                         }
                     }
+                    return val;
+                };
 
-                    this.records[i][fieldName] = val;
+                field.dataLoaded = true;
+                let val = null;
+                if (field.treatAsArray) {
+                    const numTilesEach = Math.ceil(Math.sqrt(field.longestArray));
+                    const pxSize = this.imageSize.width;
+                    const imgSize = pxSize * numTilesEach;
+                    let i = 0;
+                    for (let y = 0; y < pxSize; y++) {
+                        for (let x = 0; x < pxSize; x++) {
+                            const arr = [];
+                            for (let ty = 0; ty < numTilesEach; ty++) {
+                                for (let tx = 0; tx < numTilesEach; tx++) {
+                                    const xPos = tx * pxSize + x;
+                                    const yPos = ty * pxSize + y;
+                                    const pos = yPos * (imgSize * 4) + xPos * 4;
+
+                                    let val = valFromPixel(pos);
+                                    if (val !== null) {
+                                        arr.push(val);
+                                    }
+                                }
+                            }
+                            if (i < this.records.length) {
+                                this.records[i][fieldName] = arr;
+                            }
+                            i++;
+                        }
+                    }
+                } else {
+                    for (let i = 0; i < this.records.length; i++) {
+                        const pos = i * 4;
+                        val = valFromPixel(pos);
+                        this.records[i][fieldName] = val;
+                    }
                 }
+
                 resolve();
             })
         });
@@ -153,7 +191,7 @@ export default class PngDBReader extends PngDB {
                 this.records = data.records;
 
                 Object.keys(this.fields).forEach((fieldName) => {
-                    var field = this.fields[fieldName];
+                    const field = this.fields[fieldName];
                     field.dataLoaded = true;
                 });
                 resolve();

@@ -238,6 +238,20 @@ var PngDB = function () {
         }
 
         /**
+         * Add an Array field to the database. Arrays are represented as a large images tiled together.
+         * @param {String} fieldName (any string)
+         * @param {FieldTypes} type
+         * @param {Number} [precision] - an integer
+         */
+
+    }, {
+        key: "addArrayField",
+        value: function addArrayField(fieldName, type, precision) {
+            this.addField(fieldName, type, precision);
+            this.fields[fieldName].treatAsArray = true;
+        }
+
+        /**
          * add any metadata to be stored as JSON
          * @param {String} key
          * @param {Object} value
@@ -493,21 +507,13 @@ var PngDBWriter = function (_PngDB) {
             var _this2 = this;
 
             try {
-                var size;
-                var pxSize;
-                var dir;
-                var sortedValues;
-                var metaDataFile;
-
                 (function () {
-                    size = _this2.records.length;
-                    pxSize = Math.ceil(Math.sqrt(size));
-
+                    var size = _this2.records.length;
+                    var pxSize = Math.ceil(Math.sqrt(size));
 
                     console.log("Saving " + size + " records (width = " + pxSize + ") ...");
 
-                    dir = path.dirname(saveAs);
-
+                    var dir = path.dirname(saveAs);
 
                     if (!fs.existsSync(dir)) {
                         console.log("Making dir " + dir + " ...");
@@ -523,8 +529,7 @@ var PngDBWriter = function (_PngDB) {
                         field.range = { min: Number.MAX_VALUE, max: -Number.MAX_VALUE };
                     });
 
-                    sortedValues = {};
-
+                    var sortedValues = {};
 
                     _this2.records.forEach(function (record, i) {
                         Object.keys(_this2.fields).forEach(function (k) {
@@ -535,9 +540,19 @@ var PngDBWriter = function (_PngDB) {
                                 sortedValues[k].push(value);
                             }
                             if (field.range) {
-                                if (typeof value !== "undefined") {
-                                    field.range.min = Math.min(field.range.min, value);
-                                    field.range.max = Math.max(field.range.max, value);
+                                if (field.treatAsArray) {
+                                    if (value && value.length > 0) {
+                                        for (var j = 0; j < value.length; j++) {
+                                            var v = value[j];
+                                            field.range.min = Math.min(field.range.min, v);
+                                            field.range.max = Math.max(field.range.max, v);
+                                        }
+                                    }
+                                } else {
+                                    if (typeof value !== "undefined") {
+                                        field.range.min = Math.min(field.range.min, value);
+                                        field.range.max = Math.max(field.range.max, value);
+                                    }
                                 }
                             }
                             if (field.uniqueValues && field.uniqueValues.indexOf(value) < 0) {
@@ -570,13 +585,12 @@ var PngDBWriter = function (_PngDB) {
                         }
                     });
 
-                    metaDataFile = {
+                    var metaDataFile = {
                         metadata: _this2.metadata,
                         fields: _this2.fields,
                         recordCount: size,
                         imageSize: { width: pxSize, height: pxSize }
                     };
-
 
                     fs.writeFile(saveAs, JSON.stringify(metaDataFile, null, 2), function (err) {
                         if (err) throw err;
@@ -615,45 +629,93 @@ var PngDBWriter = function (_PngDB) {
             var _this3 = this;
 
             var Jimp = require("jimp");
-            new Jimp(pxSize, pxSize, function (err, image) {
-                var i = 0;
-                for (var y = 0; y < pxSize; y++) {
-                    for (var x = 0; x < pxSize; x++) {
-                        var record = _this3.records[i++];
-                        if (record) {
-                            var value = 0;
-                            if (field.uniqueValues) {
-                                value = field.uniqueValues.indexOf(record[fieldName]);
-                            } else {
-                                value = record[fieldName];
-                            }
-                            if (field.range) {
-                                value = value - field.range.min; //store the offset from the min value for smaller integers and also to allow signed values with the same methodology
-                            }
-                            if (field.precision) {
-                                value = Math.round(value * field.precision);
-                            } else {
-                                value = Math.round(value);
-                            }
-                            if (value > _this3.MAX_VALUE) {
-                                console.warn("Maximum value exceeded for " + fieldName + ": " + value + " (TRUNCATED)");
-                                value = _this3.MAX_VALUE;
-                            }
-                            var encodedValue = 0;
-                            if (value > 255) {
-                                var r = 0;
-                                var b = value % 256;
-                                var g = Math.floor(value / 256);
 
-                                if (g > 255) {
-                                    r = Math.floor(g / 256);
-                                    g = g % 256;
+            var imgSize = pxSize;
+            var numTilesEach = 0;
+            if (field.treatAsArray) {
+                var maxLen = 0;
+                for (var i = 0; i < this.records.length; i++) {
+                    var record = this.records[i++];
+                    var arr = record[fieldName];
+
+                    if (arr != null) {
+                        if (!Array.isArray(arr)) {
+                            throw "Array value expected on record " + i + ": Found " + arr;
+                        }
+                        maxLen = Math.max(maxLen, arr.length);
+                    }
+                }
+                numTilesEach = Math.ceil(Math.sqrt(maxLen));
+                imgSize = pxSize * numTilesEach;
+            }
+
+            var setPixel = function setPixel(image, x, y, value) {
+                if (field.range) {
+                    value = value - field.range.min; //store the offset from the min value for smaller integers and also to allow signed values with the same methodology
+                }
+                if (field.precision) {
+                    value = Math.round(value * field.precision);
+                } else {
+                    value = Math.round(value);
+                }
+                if (value > _this3.MAX_VALUE) {
+                    console.warn("Maximum value exceeded for " + fieldName + ": " + value + " (TRUNCATED)");
+                    value = _this3.MAX_VALUE;
+                }
+                var encodedValue = 0;
+                if (value > 255) {
+                    var r = 0;
+                    var b = value % 256;
+                    var g = Math.floor(value / 256);
+
+                    if (g > 255) {
+                        r = Math.floor(g / 256);
+                        g = g % 256;
+                    }
+                    encodedValue = Jimp.rgbaToInt(r, g, b, 255);
+                } else {
+                    encodedValue = Jimp.rgbaToInt(0, 0, value, 255);
+                }
+                image.setPixelColor(encodedValue, x, y);
+            };
+
+            new Jimp(imgSize, imgSize, function (err, image) {
+                if (field.treatAsArray) {
+
+                    var _i = 0;
+                    for (var y = 0; y < pxSize; y++) {
+                        for (var x = 0; x < pxSize; x++) {
+                            var _record = _this3.records[_i++];
+                            if (!_record) continue;
+                            var _arr = _record[fieldName];
+                            if (!_arr) return;
+                            var a = 0;
+                            for (var ty = 0; ty < numTilesEach; ty++) {
+                                for (var tx = 0; tx < numTilesEach; tx++) {
+                                    if (a < _arr.length) {
+                                        var value = _arr[a];
+                                        if (value !== null) {
+                                            setPixel(image, tx * pxSize + x, ty * pxSize + y, value);
+                                        }
+                                    }
+                                    a++;
                                 }
-                                encodedValue = Jimp.rgbaToInt(r, g, b, 255);
-                            } else {
-                                encodedValue = Jimp.rgbaToInt(0, 0, value, 255);
                             }
-                            image.setPixelColor(encodedValue, x, y);
+                        }
+                    }
+                } else {
+                    var _i2 = 0;
+                    for (var _y = 0; _y < pxSize; _y++) {
+                        for (var _x2 = 0; _x2 < pxSize; _x2++) {
+                            var _record2 = _this3.records[_i2++];
+                            if (!_record2) continue;
+                            var _value = 0;
+                            if (field.uniqueValues) {
+                                _value = field.uniqueValues.indexOf(_record2[fieldName]);
+                            } else {
+                                _value = _record2[fieldName];
+                            }
+                            setPixel(image, _x2, _y, _value);
                         }
                     }
                 }
