@@ -423,13 +423,15 @@ var PngDBReader = function (_PngDB) {
                         reject("Bad image path: " + err);
                         return;
                     }
-                    field.dataLoaded = true;
-                    for (var i = 0; i < _this4.records.length; i++) {
-                        var pos = i * 4;
+
+                    var valFromPixel = function valFromPixel(pos) {
+                        var a = pixels[pos + 3];
+                        if (a === 0) return null;
+
                         var r = pixels[pos];
                         var g = pixels[pos + 1];
                         var b = pixels[pos + 2];
-                        // var a = pixels[pos + 3];
+
                         var val = r << 16 | g << 8 | b;
 
                         if (field.uniqueValues) {
@@ -443,9 +445,45 @@ var PngDBReader = function (_PngDB) {
                                 val += field.range.min; // we store the offset from the min value for smaller integers and also to allow signed values with the same methodology
                             }
                         }
+                        return val;
+                    };
 
-                        _this4.records[i][fieldName] = val;
+                    field.dataLoaded = true;
+                    var val = null;
+                    if (field.treatAsArray) {
+                        var numTilesEach = Math.ceil(Math.sqrt(field.longestArray));
+                        var pxSize = _this4.imageSize.width;
+                        var imgSize = pxSize * numTilesEach;
+                        var i = 0;
+                        for (var y = 0; y < pxSize; y++) {
+                            for (var x = 0; x < pxSize; x++) {
+                                var arr = [];
+                                for (var ty = 0; ty < numTilesEach; ty++) {
+                                    for (var tx = 0; tx < numTilesEach; tx++) {
+                                        var xPos = tx * pxSize + x;
+                                        var yPos = ty * pxSize + y;
+                                        var pos = yPos * (imgSize * 4) + xPos * 4;
+
+                                        var _val = valFromPixel(pos);
+                                        if (_val !== null) {
+                                            arr.push(_val);
+                                        }
+                                    }
+                                }
+                                if (i < _this4.records.length) {
+                                    _this4.records[i][fieldName] = arr;
+                                }
+                                i++;
+                            }
+                        }
+                    } else {
+                        for (var _i = 0; _i < _this4.records.length; _i++) {
+                            var _pos = _i * 4;
+                            val = valFromPixel(_pos);
+                            _this4.records[_i][fieldName] = val;
+                        }
                     }
+
                     resolve();
                 });
             });

@@ -427,13 +427,15 @@ var PngDBReader = function (_PngDB) {
                         reject("Bad image path: " + err);
                         return;
                     }
-                    field.dataLoaded = true;
-                    for (var i = 0; i < _this4.records.length; i++) {
-                        var pos = i * 4;
+
+                    var valFromPixel = function valFromPixel(pos) {
+                        var a = pixels[pos + 3];
+                        if (a === 0) return null;
+
                         var r = pixels[pos];
                         var g = pixels[pos + 1];
                         var b = pixels[pos + 2];
-                        // var a = pixels[pos + 3];
+
                         var val = r << 16 | g << 8 | b;
 
                         if (field.uniqueValues) {
@@ -447,9 +449,45 @@ var PngDBReader = function (_PngDB) {
                                 val += field.range.min; // we store the offset from the min value for smaller integers and also to allow signed values with the same methodology
                             }
                         }
+                        return val;
+                    };
 
-                        _this4.records[i][fieldName] = val;
+                    field.dataLoaded = true;
+                    var val = null;
+                    if (field.treatAsArray) {
+                        var numTilesEach = Math.ceil(Math.sqrt(field.longestArray));
+                        var pxSize = _this4.imageSize.width;
+                        var imgSize = pxSize * numTilesEach;
+                        var i = 0;
+                        for (var y = 0; y < pxSize; y++) {
+                            for (var x = 0; x < pxSize; x++) {
+                                var arr = [];
+                                for (var ty = 0; ty < numTilesEach; ty++) {
+                                    for (var tx = 0; tx < numTilesEach; tx++) {
+                                        var xPos = tx * pxSize + x;
+                                        var yPos = ty * pxSize + y;
+                                        var pos = yPos * (imgSize * 4) + xPos * 4;
+
+                                        var _val = valFromPixel(pos);
+                                        if (_val !== null) {
+                                            arr.push(_val);
+                                        }
+                                    }
+                                }
+                                if (i < _this4.records.length) {
+                                    _this4.records[i][fieldName] = arr;
+                                }
+                                i++;
+                            }
+                        }
+                    } else {
+                        for (var _i = 0; _i < _this4.records.length; _i++) {
+                            var _pos = _i * 4;
+                            val = valFromPixel(_pos);
+                            _this4.records[_i][fieldName] = val;
+                        }
                     }
+
                     resolve();
                 });
             });
@@ -575,7 +613,7 @@ var PngDBWriter = function (_PngDB) {
                             field.precision = (_this2.MAX_VALUE - 1) / field.range.max; //use -1 to prevent floating point errors exceeding
                         }
 
-                        if (field.range && _this2.stats.quantiles > 1) {
+                        if (field.range && !field.treatAsArray && _this2.stats.quantiles > 1) {
                             sortedValues[k].sort(sortNumber);
                             field.quantiles = [];
                             for (var i = 1; i < _this2.stats.quantiles; i++) {
@@ -596,11 +634,6 @@ var PngDBWriter = function (_PngDB) {
                         imageSize: { width: pxSize, height: pxSize }
                     };
 
-                    fs.writeFile(saveAs, JSON.stringify(metaDataFile, null, 2), function (err) {
-                        if (err) throw err;
-                        console.log('Saved ' + saveAs);
-                    });
-
                     Object.keys(_this2.fields).forEach(function (fieldName) {
                         var field = _this2.fields[fieldName];
                         if (field.type === FieldTypes.KEY.name) {
@@ -608,6 +641,11 @@ var PngDBWriter = function (_PngDB) {
                         } else {
                             _this2.writePngData(dir, fieldName, field, pxSize);
                         }
+                    });
+
+                    fs.writeFile(saveAs, JSON.stringify(metaDataFile, null, 2), function (err) {
+                        if (err) throw err;
+                        console.log('Saved ' + saveAs);
                     });
                 })();
             } catch (e) {
@@ -649,6 +687,7 @@ var PngDBWriter = function (_PngDB) {
                         maxLen = Math.max(maxLen, arr.length);
                     }
                 }
+                field.longestArray = maxLen;
                 numTilesEach = Math.ceil(Math.sqrt(maxLen));
                 imgSize = pxSize * numTilesEach;
             }

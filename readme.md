@@ -2,7 +2,9 @@
 png-db uses PNG files to encode large datasets for use in the browser. This is intended to be used for tools where a large amount of data needs to be displayed in the browser all at once and server-side querying is not suitable.
 
 ##Installation
-`npm install --save png-db`
+```
+npm install --save png-db
+```
 
 ##Creating the database (Node.js)
 ```javascript
@@ -77,6 +79,24 @@ Key values (KEY) are not stored in PNG, but as a separate JSON file. There is no
 
 ###Arrays
 Support for array values is provided by tiling out the array on a grid. This is cleaner than using a separate image for each index in the array. It also compresses better and loads faster. Records can have arrays of varying length. The number of images will be equal to the longest array in the dataset. Missing values will be treated as NULL.
+```javascript
+import { FieldTypes } from 'png-db';
+import { PngDBWriter } from 'png-db';
+
+var db = new PngDBWriter();
+
+db.addField('Id', FieldTypes.KEY);
+db.addArrayField('Lat', FieldTypes.DECIMAL);
+db.addArrayField('Lon', FieldTypes.DECIMAL);
+
+db.addRecord({
+    'Id': '007',
+    'Lat': [43.5,43.6,43.7],
+    'Lon': [-73.5,-73.6,-73.7],
+});
+
+db.save('./datadir/test-db.json');
+```
 
 ###Null values
 Null values are stored using the alpha channel of the PNG. Zero is stored as 0,0,0,255. Whereas NULL is stored as 0,0,0,0.
