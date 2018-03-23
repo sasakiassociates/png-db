@@ -107,7 +107,7 @@ Metadata is used to define what information (fields) are encoded in which PNG fi
 Any additional data associated with this database can be stored using "addMetaData". This simply adds it to the JSON file.
 
 ##Why PNG?
-Whereas JPEG (JPG) is lossy, PNG files use lossless compression so that individual pixel values are reliable. JPEG's Lossless compression is unsuitable for this type of use because we don't care about what the image looks like and do care about the exact values encoded in every pixel.
+Whereas JPEG (JPG) is lossy, PNG files use lossless compression so that individual pixel values are reliable. JPEG compression is unsuitable for this type of use because we don't care about what the image looks like and do care about the exact values encoded in every pixel.
 
 ###Other PNG formats?
 PNG supports 1 byte through 4 byte images and also 16 bits x 4 channels. Taking advantage of other PNG file types could expand the amount of data and improve compression, however if we explore those avenues, we need to be careful to ensure compatibility for PNG types with all browsers and tools.
