@@ -45,6 +45,12 @@ db.load(`test-db.json`).then(()=> {
 });
 ```
 
+Or pre-ES6
+Copy versions/client/dist/png-db.js and reference it via a script tag, then use the pngDb prefix to access the objects.
+```javascript
+var db = new pngDb.PngDBReader();
+```
+
 ##Field Properties
 The following metadata is stored for each field when the database is saved
 ```javascript

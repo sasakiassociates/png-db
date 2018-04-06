@@ -24,15 +24,25 @@ var rollupVersion = function (version, pkg) {
             dest: path.join(version, 'dist/png-db.es.js'),
             sourceMap: true
         });
-        bundle.write({
-            format: 'cjs',
-            dest: path.join(version, 'dist/png-db.js'),
-            sourceMap: true
-        });
+        if (pkg.createBrowserScript) {
+            bundle.write({
+                format: 'iife',
+                moduleName: 'pngDb',
+                dest: path.join(version, 'dist/png-db.js'),
+                sourceMap: true
+            });
+        } else {
+            bundle.write({
+                format: 'cjs',
+                dest: path.join(version, 'dist/png-db.js'),
+                sourceMap: true
+            });
+        }
     });
 };
 rollupVersion('versions/client', {
-    "dependencies": {}
+    "dependencies": {},
+    "createBrowserScript": true
 });
 rollupVersion('versions/node', {
     "dependencies": {

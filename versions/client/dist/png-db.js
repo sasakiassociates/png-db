@@ -1,6 +1,5 @@
+(function (exports) {
 'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
 
 var asyncGenerator = function () {
   function AwaitValue(value) {
@@ -520,4 +519,6 @@ var PngDBReader = function (_PngDB) {
 
 exports.PngDBReader = PngDBReader;
 exports.FieldTypes = FieldTypes;
+
+}((this.pngDb = this.pngDb || {})));
 //# sourceMappingURL=png-db.js.map
