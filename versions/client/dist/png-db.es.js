@@ -160,24 +160,24 @@ var possibleConstructorReturn = function (self, call) {
 };
 
 var FieldTypes = function () {
-    function FieldTypes(name) {
-        classCallCheck(this, FieldTypes);
+  function FieldTypes(name) {
+    classCallCheck(this, FieldTypes);
 
-        this.name = name;
+    this.name = name;
+  }
+
+  createClass(FieldTypes, [{
+    key: 'toString',
+    value: function toString() {
+      return 'FieldTypes.' + this.name;
     }
-
-    createClass(FieldTypes, [{
-        key: 'toString',
-        value: function toString() {
-            return 'FieldTypes.' + this.name;
-        }
-    }], [{
-        key: 'isNumeric',
-        value: function isNumeric(name) {
-            return name === FieldTypes.INTEGER.name || name === FieldTypes.DECIMAL.name;
-        }
-    }]);
-    return FieldTypes;
+  }], [{
+    key: 'isNumeric',
+    value: function isNumeric(name) {
+      return name === FieldTypes.INTEGER.name || name === FieldTypes.DECIMAL.name;
+    }
+  }]);
+  return FieldTypes;
 }();
 
 /**

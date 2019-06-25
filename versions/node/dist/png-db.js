@@ -2,6 +2,12 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var fs = _interopDefault(require('fs'));
+var path = _interopDefault(require('path'));
+var Jimp = _interopDefault(require('jimp'));
+
 var asyncGenerator = function () {
   function AwaitValue(value) {
     this.value = value;
@@ -164,24 +170,24 @@ var possibleConstructorReturn = function (self, call) {
 };
 
 var FieldTypes = function () {
-    function FieldTypes(name) {
-        classCallCheck(this, FieldTypes);
+  function FieldTypes(name) {
+    classCallCheck(this, FieldTypes);
 
-        this.name = name;
+    this.name = name;
+  }
+
+  createClass(FieldTypes, [{
+    key: 'toString',
+    value: function toString() {
+      return 'FieldTypes.' + this.name;
     }
-
-    createClass(FieldTypes, [{
-        key: 'toString',
-        value: function toString() {
-            return 'FieldTypes.' + this.name;
-        }
-    }], [{
-        key: 'isNumeric',
-        value: function isNumeric(name) {
-            return name === FieldTypes.INTEGER.name || name === FieldTypes.DECIMAL.name;
-        }
-    }]);
-    return FieldTypes;
+  }], [{
+    key: 'isNumeric',
+    value: function isNumeric(name) {
+      return name === FieldTypes.INTEGER.name || name === FieldTypes.DECIMAL.name;
+    }
+  }]);
+  return FieldTypes;
 }();
 
 /**
@@ -518,8 +524,6 @@ var PngDBReader = function (_PngDB) {
     return PngDBReader;
 }(PngDB);
 
-var fs = require("fs");
-var path = require("path");
 /**
  * Node.js class for writing databases
  */
@@ -544,7 +548,7 @@ var PngDBWriter = function (_PngDB) {
     }
 
     createClass(PngDBWriter, [{
-        key: "save",
+        key: 'save',
         value: function save(saveAs) {
             var _this2 = this;
 
@@ -553,12 +557,12 @@ var PngDBWriter = function (_PngDB) {
                     var size = _this2.records.length;
                     var pxSize = Math.ceil(Math.sqrt(size));
 
-                    console.log("Saving " + size + " records (width = " + pxSize + ") ...");
+                    console.log('Saving ' + size + ' records (width = ' + pxSize + ') ...');
 
                     var dir = path.dirname(saveAs);
 
                     if (!fs.existsSync(dir)) {
-                        console.log("Making dir " + dir + " ...");
+                        console.log('Making dir ' + dir + ' ...');
                         fs.mkdirSync(dir);
                     }
 
@@ -653,10 +657,10 @@ var PngDBWriter = function (_PngDB) {
             }
         }
     }, {
-        key: "writeKeyData",
+        key: 'writeKeyData',
         value: function writeKeyData(dir, fieldName, field) {
             var recordKeys = [];
-            var fileName = fieldName + ".json";
+            var fileName = fieldName + '.json';
             this.records.forEach(function (record, i) {
                 recordKeys.push(record[fieldName]);
             });
@@ -666,11 +670,9 @@ var PngDBWriter = function (_PngDB) {
             });
         }
     }, {
-        key: "writePngData",
+        key: 'writePngData',
         value: function writePngData(dir, fieldName, field, pxSize) {
             var _this3 = this;
-
-            var Jimp = require("jimp");
 
             var imgSize = pxSize;
             var numTilesEach = 0;
@@ -682,7 +684,7 @@ var PngDBWriter = function (_PngDB) {
 
                     if (arr != null) {
                         if (!Array.isArray(arr)) {
-                            throw "Array value expected on record " + i + ": Found " + arr;
+                            throw 'Array value expected on record ' + i + ': Found ' + arr;
                         }
                         maxLen = Math.max(maxLen, arr.length);
                     }
@@ -702,7 +704,7 @@ var PngDBWriter = function (_PngDB) {
                     value = Math.round(value);
                 }
                 if (value > _this3.MAX_VALUE) {
-                    console.warn("Maximum value exceeded for " + fieldName + ": " + value + " (TRUNCATED)");
+                    console.warn('Maximum value exceeded for ' + fieldName + ': ' + value + ' (TRUNCATED)');
                     value = _this3.MAX_VALUE;
                 }
                 var encodedValue = 0;
@@ -762,9 +764,9 @@ var PngDBWriter = function (_PngDB) {
                         }
                     }
                 }
-                var fileName = fieldName + ".png";
+                var fileName = fieldName + '.png';
                 image.write(path.join(dir, fileName));
-                console.log(fileName + " saved");
+                console.log(fileName + ' saved');
             });
         }
 
@@ -774,7 +776,7 @@ var PngDBWriter = function (_PngDB) {
          */
 
     }, {
-        key: "saveAllRecordsAsJson",
+        key: 'saveAllRecordsAsJson',
         value: function saveAllRecordsAsJson(saveAs) {
             var fullDataFile = {
                 metadata: this.metadata,

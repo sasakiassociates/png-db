@@ -1,7 +1,9 @@
-const fs = require("fs");
-const path = require("path");
-import FieldTypes from "./FieldTypes";
+import fs from 'fs';
+import path from 'path';
+import Jimp from 'jimp';
+
 import PngDB from "./PngDB";
+import FieldTypes from "./FieldTypes";
 
 'use strict';
 /**
@@ -137,8 +139,6 @@ export default class PngDBWriter extends PngDB {
     }
 
     writePngData(dir, fieldName, field, pxSize) {
-        const Jimp = require("jimp");
-
         let imgSize = pxSize;
         let numTilesEach = 0;
         if (field.treatAsArray) {

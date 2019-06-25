@@ -8,14 +8,17 @@ var fs = require("fs");
 var path = require("path");
 
 var rollupVersion = function (version, pkg) {
-    let external = Object.keys(pkg.dependencies);
 
-    var settings = {
+    const settings = {
         entry: path.join(version, 'index.js'),
         plugins: [
             babel(babelrc.default())
         ],
-        external: external
+        external: [
+            ...Object.keys(pkg.dependencies),
+            'fs',
+            'path',
+        ]
     };
 
     rollup.rollup(settings).then(function (bundle) {
