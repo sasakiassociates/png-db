@@ -6,17 +6,21 @@ import PngDB from "./PngDB";
 import FieldTypes from "./FieldTypes";
 
 'use strict';
+
 /**
  * Node.js class for writing databases
  */
 export default class PngDBWriter extends PngDB {
 
-    constructor({quantiles = 0} = {}) {
+    constructor({quantiles = 0, buckets = {}} = {}) {
         super();
+
+        buckets.count = buckets.count || 0;
 
         this.MAX_VALUE = 255 * 256 * 256 - 1;
         this.stats = {
-            quantiles: quantiles//e.g. use 4 for 'quartiles' (25th percentile, 50th percentile etc)
+            quantiles, //e.g. use 4 for 'quartiles' (25th percentile, 50th percentile etc)
+            buckets,
         };
     }
 
@@ -50,7 +54,7 @@ export default class PngDBWriter extends PngDB {
                 Object.keys(this.fields).forEach((k) => {
                     const field = this.fields[k];
                     let value = record[k];
-                    if (this.stats.quantiles > 1) {
+                    if (this.stats.quantiles > 1 || this.stats.buckets.count > 1) {
                         if (!sortedValues[k]) sortedValues[k] = [];
                         sortedValues[k].push(value);
                     }
@@ -87,8 +91,14 @@ export default class PngDBWriter extends PngDB {
                     field.precision = (this.MAX_VALUE - 1) / field.range.max;//use -1 to prevent floating point errors exceeding
                 }
 
-                if (field.range && !field.treatAsArray && this.stats.quantiles > 1) {
+                const generateQuantiles = field.range && !field.treatAsArray && this.stats.quantiles > 1;
+                const generateBuckets = field.range && !field.treatAsArray && this.stats.buckets.count > 1;
+
+                if (generateQuantiles || generateBuckets) {
                     sortedValues[k].sort(sortNumber);
+                }
+
+                if (generateQuantiles) {
                     field.quantiles = [];
                     for (let i = 1; i < this.stats.quantiles; i++) {
                         let frac = i / this.stats.quantiles;
@@ -98,6 +108,40 @@ export default class PngDBWriter extends PngDB {
                             value: sortedValues[k][pos],
                         });
                     }
+                }
+
+                if (generateBuckets) {
+                    const buckets = [];
+
+                    const min = 'min' in this.stats.buckets ? this.stats.buckets.min : field.range.min;
+                    const max = 'max' in this.stats.buckets ? this.stats.buckets.max : field.range.max;
+                    const range = max - min;
+                    const size = range / this.stats.buckets.count;
+
+                    for (let i = 0; i <= this.stats.buckets.count; i++) {
+                        buckets.push({
+                            quantity: 0,
+                            value: (i * size) + min,
+                        });
+                    }
+
+                    sortedValues[k].forEach(val => {
+                        buckets.some((bucket, i) => {
+                            if (bucket.value > val && buckets[i - 1]) {
+                                if (buckets[i - 1]) {
+                                    buckets[i - 1].quantity++;
+                                }
+
+                                return true;
+                            }
+                        });
+                    });
+
+                    // Since we aggregate i - 1 to exclude values below the min, we only needed
+                    // the extra bucket for aggregating values into the actual last bucket.
+                    buckets.pop();
+
+                    field.buckets = buckets;
                 }
             });
 

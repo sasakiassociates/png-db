@@ -530,13 +530,18 @@ var PngDBWriter = function (_PngDB) {
 
         var _ref$quantiles = _ref.quantiles;
         var quantiles = _ref$quantiles === undefined ? 0 : _ref$quantiles;
+        var _ref$buckets = _ref.buckets;
+        var buckets = _ref$buckets === undefined ? {} : _ref$buckets;
         classCallCheck(this, PngDBWriter);
 
         var _this = possibleConstructorReturn(this, (PngDBWriter.__proto__ || Object.getPrototypeOf(PngDBWriter)).call(this));
 
+        buckets.count = buckets.count || 0;
+
         _this.MAX_VALUE = 255 * 256 * 256 - 1;
         _this.stats = {
-            quantiles: quantiles //e.g. use 4 for 'quartiles' (25th percentile, 50th percentile etc)
+            quantiles: quantiles, //e.g. use 4 for 'quartiles' (25th percentile, 50th percentile etc)
+            buckets: buckets
         };
         return _this;
     }
@@ -575,7 +580,7 @@ var PngDBWriter = function (_PngDB) {
                         Object.keys(_this2.fields).forEach(function (k) {
                             var field = _this2.fields[k];
                             var value = record[k];
-                            if (_this2.stats.quantiles > 1) {
+                            if (_this2.stats.quantiles > 1 || _this2.stats.buckets.count > 1) {
                                 if (!sortedValues[k]) sortedValues[k] = [];
                                 sortedValues[k].push(value);
                             }
@@ -611,8 +616,14 @@ var PngDBWriter = function (_PngDB) {
                             field.precision = (_this2.MAX_VALUE - 1) / field.range.max; //use -1 to prevent floating point errors exceeding
                         }
 
-                        if (field.range && !field.treatAsArray && _this2.stats.quantiles > 1) {
+                        var generateQuantiles = field.range && !field.treatAsArray && _this2.stats.quantiles > 1;
+                        var generateBuckets = field.range && !field.treatAsArray && _this2.stats.buckets.count > 1;
+
+                        if (generateQuantiles || generateBuckets) {
                             sortedValues[k].sort(sortNumber);
+                        }
+
+                        if (generateQuantiles) {
                             field.quantiles = [];
                             for (var i = 1; i < _this2.stats.quantiles; i++) {
                                 var frac = i / _this2.stats.quantiles;
@@ -622,6 +633,42 @@ var PngDBWriter = function (_PngDB) {
                                     value: sortedValues[k][pos]
                                 });
                             }
+                        }
+
+                        if (generateBuckets) {
+                            (function () {
+                                var buckets = [];
+
+                                var min = 'min' in _this2.stats.buckets ? _this2.stats.buckets.min : field.range.min;
+                                var max = 'max' in _this2.stats.buckets ? _this2.stats.buckets.max : field.range.max;
+                                var range = max - min;
+                                var size = range / _this2.stats.buckets.count;
+
+                                for (var _i = 0; _i <= _this2.stats.buckets.count; _i++) {
+                                    buckets.push({
+                                        quantity: 0,
+                                        value: _i * size + min
+                                    });
+                                }
+
+                                sortedValues[k].forEach(function (val) {
+                                    buckets.some(function (bucket, i) {
+                                        if (bucket.value > val && buckets[i - 1]) {
+                                            if (buckets[i - 1]) {
+                                                buckets[i - 1].quantity++;
+                                            }
+
+                                            return true;
+                                        }
+                                    });
+                                });
+
+                                // Since we aggregate i - 1 to exclude values below the min, we only needed
+                                // the extra bucket for aggregating values into the actual last bucket.
+                                buckets.pop();
+
+                                field.buckets = buckets;
+                            })();
                         }
                     });
 
@@ -721,10 +768,10 @@ var PngDBWriter = function (_PngDB) {
             new Jimp(imgSize, imgSize, function (err, image) {
                 if (field.treatAsArray) {
 
-                    var _i = 0;
+                    var _i2 = 0;
                     for (var y = 0; y < pxSize; y++) {
                         for (var x = 0; x < pxSize; x++) {
-                            var _record = _this3.records[_i++];
+                            var _record = _this3.records[_i2++];
                             if (!_record) continue;
                             var _arr = _record[fieldName];
                             if (!_arr) return;
@@ -743,10 +790,10 @@ var PngDBWriter = function (_PngDB) {
                         }
                     }
                 } else {
-                    var _i2 = 0;
+                    var _i3 = 0;
                     for (var _y = 0; _y < pxSize; _y++) {
                         for (var _x2 = 0; _x2 < pxSize; _x2++) {
-                            var _record2 = _this3.records[_i2++];
+                            var _record2 = _this3.records[_i3++];
                             if (!_record2) continue;
                             var _value = 0;
                             if (field.uniqueValues) {
