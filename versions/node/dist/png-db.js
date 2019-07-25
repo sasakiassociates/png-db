@@ -660,21 +660,44 @@ var PngDBWriter = function (_PngDB) {
                                     });
                                 }
 
-                                sortedValues[k].forEach(function (val) {
-                                    buckets.some(function (bucket, i) {
-                                        if (bucket.range.min >= val && buckets[i - 1]) {
-                                            if (buckets[i - 1]) {
-                                                buckets[i - 1].quantity++;
-                                            }
+                                var supraMinBucket = {
+                                    quantity: 0,
+                                    range: {
+                                        min: 0,
+                                        max: min
+                                    }
+                                };
+                                var superMaxBucket = {
+                                    quantity: 0,
+                                    range: {
+                                        min: max,
+                                        max: Infinity
+                                    }
+                                };
 
-                                            return true;
-                                        }
-                                    });
+                                sortedValues[k].forEach(function (val) {
+                                    if (val > max) {
+                                        superMaxBucket.quantity++;
+                                    } else if (val < min) {
+                                        supraMinBucket.quantity++;
+                                    } else {
+                                        buckets.some(function (bucket, i) {
+                                            if (bucket.range.min >= val && buckets[i - 1]) {
+                                                if (buckets[i - 1]) {
+                                                    buckets[i - 1].quantity++;
+                                                }
+
+                                                return true;
+                                            }
+                                        });
+                                    }
                                 });
 
                                 // Since we aggregate i - 1 to exclude values below the min, we only needed
                                 // the extra bucket for aggregating values into the actual last bucket.
                                 buckets.pop();
+                                buckets.unshift(supraMinBucket);
+                                buckets.push(superMaxBucket);
 
                                 field.buckets = buckets;
                             })();
