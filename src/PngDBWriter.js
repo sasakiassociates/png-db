@@ -121,13 +121,16 @@ export default class PngDBWriter extends PngDB {
                     for (let i = 0; i <= this.stats.buckets.count; i++) {
                         buckets.push({
                             quantity: 0,
-                            value: (i * size) + min,
+                            range: {
+                                min: (i * size) + min,
+                                max: ((i + 1) * size) + min,
+                            }
                         });
                     }
 
                     sortedValues[k].forEach(val => {
                         buckets.some((bucket, i) => {
-                            if (bucket.value > val && buckets[i - 1]) {
+                            if (bucket.range.min >= val && buckets[i - 1]) {
                                 if (buckets[i - 1]) {
                                     buckets[i - 1].quantity++;
                                 }

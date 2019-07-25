@@ -1,12 +1,12 @@
 const { PngDBWriter, FieldTypes } = require('../../../versions/node/dist/png-db');
 
-const sizes = [5, 3, 5, 2, 2, 7];
+const sizes = [15, 3, 5, 12, 2, 7];
 const buckets = {
     count: sizes.length,
-    min: 0,
-    max: 300,
+    min: 50,
+    max: 250,
 }
-const bucketSize = Math.floor((buckets.max - buckets.min) / sizes.length);
+const bucketSize = (buckets.max - buckets.min) / sizes.length;
 
 const data = sizes.reduce((data, size, i) => {
     const dataForSize = [];
@@ -16,7 +16,7 @@ const data = sizes.reduce((data, size, i) => {
 
     for (let i = 0; i < size; i++) {
         dataForSize.push({
-            Value: Math.floor(Math.random() * (max - min)) + min,
+            Value: Math.round(Math.random() * (max - min)) + min,
         });
     };
 

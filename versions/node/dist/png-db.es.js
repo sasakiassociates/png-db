@@ -647,13 +647,16 @@ var PngDBWriter = function (_PngDB) {
                                 for (var _i = 0; _i <= _this2.stats.buckets.count; _i++) {
                                     buckets.push({
                                         quantity: 0,
-                                        value: _i * size + min
+                                        range: {
+                                            min: _i * size + min,
+                                            max: (_i + 1) * size + min
+                                        }
                                     });
                                 }
 
                                 sortedValues[k].forEach(function (val) {
                                     buckets.some(function (bucket, i) {
-                                        if (bucket.value > val && buckets[i - 1]) {
+                                        if (bucket.range.min >= val && buckets[i - 1]) {
                                             if (buckets[i - 1]) {
                                                 buckets[i - 1].quantity++;
                                             }
