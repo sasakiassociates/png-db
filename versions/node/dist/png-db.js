@@ -663,7 +663,7 @@ var PngDBWriter = function (_PngDB) {
                                 var supraMinBucket = {
                                     quantity: 0,
                                     range: {
-                                        min: 0,
+                                        min: -Infinity,
                                         max: min
                                     }
                                 };
@@ -696,8 +696,15 @@ var PngDBWriter = function (_PngDB) {
                                 // Since we aggregate i - 1 to exclude values below the min, we only needed
                                 // the extra bucket for aggregating values into the actual last bucket.
                                 buckets.pop();
-                                buckets.unshift(supraMinBucket);
-                                buckets.push(superMaxBucket);
+                                if (supraMinBucket.quantity > 0 || superMaxBucket.quantity > 0) {
+                                    field.gutterBuckets = {};
+                                }
+                                if (supraMinBucket.quantity > 0) {
+                                    field.gutterBuckets.min = supraMinBucket;
+                                }
+                                if (superMaxBucket.quantity > 0) {
+                                    field.gutterBuckets.max = superMaxBucket;
+                                }
 
                                 field.buckets = buckets;
                             })();
