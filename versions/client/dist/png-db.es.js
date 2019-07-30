@@ -229,11 +229,16 @@ var PngDB = function () {
 
     createClass(PngDB, [{
         key: 'addField',
-        value: function addField(fieldName, type, opts) {
+        value: function addField(fieldName, type) {
+            var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
             var ft = new FieldTypes();
             this.fields[fieldName] = { type: type.name };
 
             if ('buckets' in opts) {
+                if (!('count' in buckets)) {
+                    opts.buckets.count = 0;
+                }
                 this.fields[fieldName].buckets = opts.buckets;
             } else {
                 this.fields[fieldName].buckets = { count: 0 };
@@ -252,7 +257,9 @@ var PngDB = function () {
 
     }, {
         key: 'addArrayField',
-        value: function addArrayField(fieldName, type, opts) {
+        value: function addArrayField(fieldName, type) {
+            var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
             this.addField(fieldName, type, opts);
             this.fields[fieldName].treatAsArray = true;
         }
