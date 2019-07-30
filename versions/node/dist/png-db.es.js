@@ -227,17 +227,23 @@ var PngDB = function () {
      * Add a field to the database
      * @param {String} fieldName (any string)
      * @param {FieldTypes} type
-     * @param {Number} [precision] - an integer
+     * @param {Object} [opts] - field options
      */
 
 
     createClass(PngDB, [{
-        key: "addField",
-        value: function addField(fieldName, type, precision) {
+        key: 'addField',
+        value: function addField(fieldName, type, opts) {
             var ft = new FieldTypes();
             this.fields[fieldName] = { type: type.name };
-            if (precision) {
-                this.fields[fieldName].precision = precision;
+
+            if ('buckets' in opts) {
+                this.fields[fieldName].buckets = opts.buckets;
+            } else {
+                this.fields[fieldName].buckets = { count: 0 };
+            }
+            if ('precision' in opts) {
+                this.fields[fieldName].precision = opts.precision;
             }
         }
 
@@ -245,13 +251,13 @@ var PngDB = function () {
          * Add an Array field to the database. Arrays are represented as a large images tiled together.
          * @param {String} fieldName (any string)
          * @param {FieldTypes} type
-         * @param {Number} [precision] - an integer
+         * @param {Object} [opts] - field options
          */
 
     }, {
-        key: "addArrayField",
-        value: function addArrayField(fieldName, type, precision) {
-            this.addField(fieldName, type, precision);
+        key: 'addArrayField',
+        value: function addArrayField(fieldName, type, opts) {
+            this.addField(fieldName, type, opts);
             this.fields[fieldName].treatAsArray = true;
         }
 
@@ -262,7 +268,7 @@ var PngDB = function () {
          */
 
     }, {
-        key: "addMetaData",
+        key: 'addMetaData',
         value: function addMetaData(key, value) {
             this.metadata[key] = value;
         }
@@ -273,13 +279,13 @@ var PngDB = function () {
          */
 
     }, {
-        key: "addRecord",
+        key: 'addRecord',
         value: function addRecord(record) {
             // console.log('Add record');
             this.records.push(record);
         }
     }, {
-        key: "_shiftBits",
+        key: '_shiftBits',
         value: function _shiftBits(number, columns) {
             if (!number) number = 0;
             if (columns === 0) return number;
@@ -288,7 +294,7 @@ var PngDB = function () {
             if (columns === 3) return number << 32;
         }
     }, {
-        key: "_encodeFields",
+        key: '_encodeFields',
         value: function _encodeFields(record, field1, field2) {
             //(0x6633 << 16 | 0x3399).toString(16)
             return this._shiftBits(record[field1], 2) | record[field2];
@@ -530,19 +536,13 @@ var PngDBWriter = function (_PngDB) {
 
         var _ref$quantiles = _ref.quantiles;
         var quantiles = _ref$quantiles === undefined ? 0 : _ref$quantiles;
-        var _ref$buckets = _ref.buckets;
-        var buckets = _ref$buckets === undefined ? {} : _ref$buckets;
         classCallCheck(this, PngDBWriter);
 
         var _this = possibleConstructorReturn(this, (PngDBWriter.__proto__ || Object.getPrototypeOf(PngDBWriter)).call(this));
 
-        buckets.count = buckets.count || 0;
-
         _this.MAX_VALUE = 255 * 256 * 256 - 1;
         _this.stats = {
-            quantiles: quantiles, //e.g. use 4 for 'quartiles' (25th percentile, 50th percentile etc)
-            buckets: buckets
-        };
+            quantiles: quantiles };
         return _this;
     }
 
@@ -580,7 +580,7 @@ var PngDBWriter = function (_PngDB) {
                         Object.keys(_this2.fields).forEach(function (k) {
                             var field = _this2.fields[k];
                             var value = record[k];
-                            if (_this2.stats.quantiles > 1 || _this2.stats.buckets.count > 1) {
+                            if (_this2.stats.quantiles > 1 || field.buckets.count > 1) {
                                 if (!sortedValues[k]) sortedValues[k] = [];
                                 sortedValues[k].push(value);
                             }
@@ -617,7 +617,7 @@ var PngDBWriter = function (_PngDB) {
                         }
 
                         var generateQuantiles = field.range && !field.treatAsArray && _this2.stats.quantiles > 1;
-                        var generateBuckets = field.range && !field.treatAsArray && _this2.stats.buckets.count > 1;
+                        var generateBuckets = field.range && !field.treatAsArray && field.buckets.count > 1;
 
                         if (generateQuantiles || generateBuckets) {
                             sortedValues[k].sort(sortNumber);
@@ -639,12 +639,12 @@ var PngDBWriter = function (_PngDB) {
                             (function () {
                                 var buckets = [];
 
-                                var min = 'min' in _this2.stats.buckets ? _this2.stats.buckets.min : field.range.min;
-                                var max = 'max' in _this2.stats.buckets ? _this2.stats.buckets.max : field.range.max;
+                                var min = 'min' in field.buckets ? field.buckets.min : field.range.min;
+                                var max = 'max' in field.buckets ? field.buckets.max : field.range.max;
                                 var range = max - min;
-                                var size = range / _this2.stats.buckets.count;
+                                var size = range / field.buckets.count;
 
-                                for (var _i = 0; _i <= _this2.stats.buckets.count; _i++) {
+                                for (var _i = 0; _i <= field.buckets.count; _i++) {
                                     buckets.push({
                                         quantity: 0,
                                         range: {

@@ -223,17 +223,23 @@ var PngDB = function () {
      * Add a field to the database
      * @param {String} fieldName (any string)
      * @param {FieldTypes} type
-     * @param {Number} [precision] - an integer
+     * @param {Object} [opts] - field options
      */
 
 
     createClass(PngDB, [{
-        key: "addField",
-        value: function addField(fieldName, type, precision) {
+        key: 'addField',
+        value: function addField(fieldName, type, opts) {
             var ft = new FieldTypes();
             this.fields[fieldName] = { type: type.name };
-            if (precision) {
-                this.fields[fieldName].precision = precision;
+
+            if ('buckets' in opts) {
+                this.fields[fieldName].buckets = opts.buckets;
+            } else {
+                this.fields[fieldName].buckets = { count: 0 };
+            }
+            if ('precision' in opts) {
+                this.fields[fieldName].precision = opts.precision;
             }
         }
 
@@ -241,13 +247,13 @@ var PngDB = function () {
          * Add an Array field to the database. Arrays are represented as a large images tiled together.
          * @param {String} fieldName (any string)
          * @param {FieldTypes} type
-         * @param {Number} [precision] - an integer
+         * @param {Object} [opts] - field options
          */
 
     }, {
-        key: "addArrayField",
-        value: function addArrayField(fieldName, type, precision) {
-            this.addField(fieldName, type, precision);
+        key: 'addArrayField',
+        value: function addArrayField(fieldName, type, opts) {
+            this.addField(fieldName, type, opts);
             this.fields[fieldName].treatAsArray = true;
         }
 
@@ -258,7 +264,7 @@ var PngDB = function () {
          */
 
     }, {
-        key: "addMetaData",
+        key: 'addMetaData',
         value: function addMetaData(key, value) {
             this.metadata[key] = value;
         }
@@ -269,13 +275,13 @@ var PngDB = function () {
          */
 
     }, {
-        key: "addRecord",
+        key: 'addRecord',
         value: function addRecord(record) {
             // console.log('Add record');
             this.records.push(record);
         }
     }, {
-        key: "_shiftBits",
+        key: '_shiftBits',
         value: function _shiftBits(number, columns) {
             if (!number) number = 0;
             if (columns === 0) return number;
@@ -284,7 +290,7 @@ var PngDB = function () {
             if (columns === 3) return number << 32;
         }
     }, {
-        key: "_encodeFields",
+        key: '_encodeFields',
         value: function _encodeFields(record, field1, field2) {
             //(0x6633 << 16 | 0x3399).toString(16)
             return this._shiftBits(record[field1], 2) | record[field2];

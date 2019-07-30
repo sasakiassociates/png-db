@@ -16,13 +16,20 @@ export default class PngDB {
      * Add a field to the database
      * @param {String} fieldName (any string)
      * @param {FieldTypes} type
-     * @param {Number} [precision] - an integer
+     * @param {Object} [opts] - field options
      */
-    addField(fieldName, type, precision) {
+    addField(fieldName, type, opts) {
         var ft = new FieldTypes();
         this.fields[fieldName] = {type: type.name};
-        if (precision) {
-            this.fields[fieldName].precision = precision;
+
+        if ('buckets' in opts) {
+            this.fields[fieldName].buckets = opts.buckets;
+        }
+        else {
+            this.fields[fieldName].buckets = { count: 0 };
+        }
+        if ('precision' in opts) {
+            this.fields[fieldName].precision = opts.precision;
         }
     }
 
@@ -30,10 +37,10 @@ export default class PngDB {
      * Add an Array field to the database. Arrays are represented as a large images tiled together.
      * @param {String} fieldName (any string)
      * @param {FieldTypes} type
-     * @param {Number} [precision] - an integer
+     * @param {Object} [opts] - field options
      */
-    addArrayField(fieldName, type, precision) {
-        this.addField(fieldName, type, precision);
+    addArrayField(fieldName, type, opts) {
+        this.addField(fieldName, type, opts);
         this.fields[fieldName].treatAsArray = true;
     }
 

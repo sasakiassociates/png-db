@@ -29,6 +29,10 @@ data.push({ Value: 10 });
 data.push({ Value: 30 });
 data.push({ Value: 20 });
 
+data.push({ Value: NaN });
+data.push({ Value: null });
+data.push({ Value: undefined });
+
 /*
 data.push({ Value: 1000 });
 data.push({ Value: 280 });
@@ -36,7 +40,7 @@ data.push({ Value: 305 });
 data.push({ Value: 315 });
 */
 
-const db = new PngDBWriter({ buckets });
-db.addField('Value', FieldTypes.INTEGER);
+const db = new PngDBWriter();
+db.addField('Value', FieldTypes.INTEGER, { buckets });
 data.forEach(record => db.addRecord(record));
 db.save('./data/buckets.json');

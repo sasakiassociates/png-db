@@ -12,15 +12,12 @@ import FieldTypes from "./FieldTypes";
  */
 export default class PngDBWriter extends PngDB {
 
-    constructor({quantiles = 0, buckets = {}} = {}) {
+    constructor({quantiles = 0} = {}) {
         super();
-
-        buckets.count = buckets.count || 0;
 
         this.MAX_VALUE = 255 * 256 * 256 - 1;
         this.stats = {
             quantiles, //e.g. use 4 for 'quartiles' (25th percentile, 50th percentile etc)
-            buckets,
         };
     }
 
@@ -54,7 +51,7 @@ export default class PngDBWriter extends PngDB {
                 Object.keys(this.fields).forEach((k) => {
                     const field = this.fields[k];
                     let value = record[k];
-                    if (this.stats.quantiles > 1 || this.stats.buckets.count > 1) {
+                    if (this.stats.quantiles > 1 || field.buckets.count > 1) {
                         if (!sortedValues[k]) sortedValues[k] = [];
                         sortedValues[k].push(value);
                     }
@@ -92,7 +89,7 @@ export default class PngDBWriter extends PngDB {
                 }
 
                 const generateQuantiles = field.range && !field.treatAsArray && this.stats.quantiles > 1;
-                const generateBuckets = field.range && !field.treatAsArray && this.stats.buckets.count > 1;
+                const generateBuckets = field.range && !field.treatAsArray && field.buckets.count > 1;
 
                 if (generateQuantiles || generateBuckets) {
                     sortedValues[k].sort(sortNumber);
@@ -113,12 +110,12 @@ export default class PngDBWriter extends PngDB {
                 if (generateBuckets) {
                     const buckets = [];
 
-                    const min = 'min' in this.stats.buckets ? this.stats.buckets.min : field.range.min;
-                    const max = 'max' in this.stats.buckets ? this.stats.buckets.max : field.range.max;
+                    const min = 'min' in field.buckets ? field.buckets.min : field.range.min;
+                    const max = 'max' in field.buckets ? field.buckets.max : field.range.max;
                     const range = max - min;
-                    const size = range / this.stats.buckets.count;
+                    const size = range / field.buckets.count;
 
-                    for (let i = 0; i <= this.stats.buckets.count; i++) {
+                    for (let i = 0; i <= field.buckets.count; i++) {
                         buckets.push({
                             quantity: 0,
                             range: {
