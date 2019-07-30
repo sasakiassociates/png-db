@@ -530,6 +530,10 @@ var PngDBReader = function (_PngDB) {
     return PngDBReader;
 }(PngDB);
 
+var isVal = function isVal(x) {
+    return typeof x !== 'undefined' && x !== null && !isNaN(x);
+};
+
 /**
  * Node.js class for writing databases
  */
@@ -595,18 +599,21 @@ var PngDBWriter = function (_PngDB) {
                                     if (value && value.length > 0) {
                                         for (var j = 0; j < value.length; j++) {
                                             var v = value[j];
-                                            field.range.min = Math.min(field.range.min, v);
-                                            field.range.max = Math.max(field.range.max, v);
+
+                                            if (isVal(v)) {
+                                                field.range.min = Math.min(field.range.min, v);
+                                                field.range.max = Math.max(field.range.max, v);
+                                            }
                                         }
                                     }
                                 } else {
-                                    if (typeof value !== "undefined") {
+                                    if (isVal(value)) {
                                         field.range.min = Math.min(field.range.min, value);
                                         field.range.max = Math.max(field.range.max, value);
                                     }
                                 }
                             }
-                            if (field.uniqueValues && field.uniqueValues.indexOf(value) < 0) {
+                            if (field.uniqueValues && field.uniqueValues.indexOf(value) < 0 && isVal(value)) {
                                 field.uniqueValues.push(value);
                             }
                         });
@@ -819,7 +826,7 @@ var PngDBWriter = function (_PngDB) {
                                 for (var tx = 0; tx < numTilesEach; tx++) {
                                     if (a < _arr.length) {
                                         var value = _arr[a];
-                                        if (value !== null) {
+                                        if (isVal(value)) {
                                             setPixel(image, tx * pxSize + x, ty * pxSize + y, value);
                                         }
                                     }
@@ -840,7 +847,9 @@ var PngDBWriter = function (_PngDB) {
                             } else {
                                 _value = _record2[fieldName];
                             }
-                            setPixel(image, _x2, _y, _value);
+                            if (isVal(_value)) {
+                                setPixel(image, _x2, _y, _value);
+                            }
                         }
                     }
                 }

@@ -7,6 +7,9 @@ import FieldTypes from "./FieldTypes";
 
 'use strict';
 
+const isVal = x => typeof x !== 'undefined' && x !== null && !isNaN(x);
+
+
 /**
  * Node.js class for writing databases
  */
@@ -60,19 +63,22 @@ export default class PngDBWriter extends PngDB {
                             if (value && value.length > 0) {
                                 for (let j = 0; j < value.length; j++) {
                                     const v = value[j];
-                                    field.range.min = Math.min(field.range.min, v);
-                                    field.range.max = Math.max(field.range.max, v);
+
+                                    if (isVal(v)) {
+                                        field.range.min = Math.min(field.range.min, v);
+                                        field.range.max = Math.max(field.range.max, v);
+                                    }
                                 }
                             }
                         } else {
-                            if (typeof value !== "undefined") {
+                            if (isVal(value)) {
                                 field.range.min = Math.min(field.range.min, value);
                                 field.range.max = Math.max(field.range.max, value);
                             }
                         }
 
                     }
-                    if (field.uniqueValues && field.uniqueValues.indexOf(value) < 0) {
+                    if (field.uniqueValues && field.uniqueValues.indexOf(value) < 0 && isVal(value)) {
                         field.uniqueValues.push(value);
                     }
                 });
@@ -280,7 +286,7 @@ export default class PngDBWriter extends PngDB {
                             for (let tx = 0; tx < numTilesEach; tx++) {
                                 if (a < arr.length) {
                                     const value = arr[a];
-                                    if (value !== null) {
+                                    if (isVal(value)) {
                                         setPixel(image, tx * pxSize + x, ty * pxSize + y, value);
                                     }
                                 }
@@ -301,7 +307,9 @@ export default class PngDBWriter extends PngDB {
                         } else {
                             value = record[fieldName];
                         }
-                        setPixel(image, x, y, value);
+                        if (isVal(value)) {
+                            setPixel(image, x, y, value);
+                        }
                     }
                 }
             }
