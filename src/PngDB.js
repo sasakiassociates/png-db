@@ -23,7 +23,7 @@ export default class PngDB {
         this.fields[fieldName] = {type: type.name};
 
         if ('buckets' in opts) {
-            if (!('count' in buckets)) {
+            if (!('count' in opts.buckets)) {
                 opts.buckets.count = 0;
             }
             this.fields[fieldName].buckets = opts.buckets;
