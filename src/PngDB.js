@@ -18,7 +18,7 @@ export default class PngDB {
      * @param {FieldTypes} type
      * @param {Object} [opts] - field options
      */
-    addField(fieldName, type, opts) {
+    addField(fieldName, type, opts = {}) {
         var ft = new FieldTypes();
         this.fields[fieldName] = {type: type.name};
 
@@ -39,7 +39,7 @@ export default class PngDB {
      * @param {FieldTypes} type
      * @param {Object} [opts] - field options
      */
-    addArrayField(fieldName, type, opts) {
+    addArrayField(fieldName, type, opts = {}) {
         this.addField(fieldName, type, opts);
         this.fields[fieldName].treatAsArray = true;
     }
