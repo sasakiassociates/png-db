@@ -22,15 +22,11 @@ export default class PngDB {
         var ft = new FieldTypes();
         this.fields[fieldName] = {type: type.name};
 
-        if ('buckets' in opts) {
-            if (!('count' in opts.buckets)) {
-                opts.buckets.count = 0;
-            }
-            this.fields[fieldName].buckets = opts.buckets;
-        }
-        else {
-            this.fields[fieldName].buckets = { count: 0 };
-        }
+        this.fields[fieldName].buckets = {
+            count: 0,
+            ...opts.buckets,
+        };
+
         if ('precision' in opts) {
             this.fields[fieldName].precision = opts.precision;
         }

@@ -138,6 +138,20 @@ var createClass = function () {
   };
 }();
 
+var _extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+
+    for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
+  return target;
+};
+
 var inherits = function (subClass, superClass) {
   if (typeof superClass !== "function" && superClass !== null) {
     throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
@@ -238,14 +252,10 @@ var PngDB = function () {
             var ft = new FieldTypes();
             this.fields[fieldName] = { type: type.name };
 
-            if ('buckets' in opts) {
-                if (!('count' in opts.buckets)) {
-                    opts.buckets.count = 0;
-                }
-                this.fields[fieldName].buckets = opts.buckets;
-            } else {
-                this.fields[fieldName].buckets = { count: 0 };
-            }
+            this.fields[fieldName].buckets = _extends({
+                count: 0
+            }, opts.buckets);
+
             if ('precision' in opts) {
                 this.fields[fieldName].precision = opts.precision;
             }

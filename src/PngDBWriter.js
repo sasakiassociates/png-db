@@ -38,7 +38,6 @@ export default class PngDBWriter extends PngDB {
                 fs.mkdirSync(dir);
             }
 
-
             Object.keys(this.fields).forEach((k) => {
                 const field = this.fields[k];
                 if (field.type === FieldTypes.TEXT.name) {
@@ -78,7 +77,7 @@ export default class PngDBWriter extends PngDB {
                         }
 
                     }
-                    if (field.uniqueValues && field.uniqueValues.indexOf(value) < 0 && isVal(value)) {
+                    if (field.uniqueValues && field.uniqueValues.indexOf(value) < 0) {
                         field.uniqueValues.push(value);
                     }
                 });
@@ -180,6 +179,9 @@ export default class PngDBWriter extends PngDB {
                     }
 
                     field.buckets = buckets;
+                }
+                else {
+                    delete field.buckets;
                 }
             });
 
@@ -307,6 +309,7 @@ export default class PngDBWriter extends PngDB {
                         } else {
                             value = record[fieldName];
                         }
+
                         if (isVal(value)) {
                             setPixel(image, x, y, value);
                         }
