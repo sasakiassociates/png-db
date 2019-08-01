@@ -665,6 +665,21 @@ var PngDBWriter = function (_PngDB) {
 
                                 var min = 'min' in field.buckets ? field.buckets.min : field.range.min;
                                 var max = 'max' in field.buckets ? field.buckets.max : field.range.max;
+
+                                /*
+                                if (!('min' in field.buckets && 'max' in field.buckets)) {
+                                    let data = sortedValues[k];
+                                    if ('min' in field.buckets || 'max' in field.buckets) {
+                                        data =  sortedValues[k].filter(val => min <= val && max)
+                                    }
+                                     const median = data[Math.round(data.length * .5)];
+                                    const mean = data.reduce((a,b) => a + b, 0) / data.length;
+                                     console.log(median, mean, Math.abs((median - mean) / median));
+                                     const twentyFifth = Math.round(data.length * .25);
+                                    const seventyFifth = Math.round(data.length * .75);
+                                }
+                                */
+
                                 var range = max - min;
                                 var size = range / field.buckets.count;
 
@@ -678,14 +693,14 @@ var PngDBWriter = function (_PngDB) {
                                     });
                                 }
 
-                                var supraMinBucket = {
+                                var underflow = {
                                     quantity: 0,
                                     range: {
                                         min: -Infinity,
                                         max: min
                                     }
                                 };
-                                var superMaxBucket = {
+                                var overflow = {
                                     quantity: 0,
                                     range: {
                                         min: max,
@@ -695,9 +710,9 @@ var PngDBWriter = function (_PngDB) {
 
                                 sortedValues[k].forEach(function (val) {
                                     if (val > max) {
-                                        superMaxBucket.quantity++;
+                                        overflow.quantity++;
                                     } else if (val < min) {
-                                        supraMinBucket.quantity++;
+                                        underflow.quantity++;
                                     } else {
                                         buckets.some(function (bucket, i) {
                                             if (bucket.range.min >= val && buckets[i - 1]) {
@@ -714,14 +729,14 @@ var PngDBWriter = function (_PngDB) {
                                 // Since we aggregate i - 1 to exclude values below the min, we only needed
                                 // the extra bucket for aggregating values into the actual last bucket.
                                 buckets.pop();
-                                if (supraMinBucket.quantity > 0 || superMaxBucket.quantity > 0) {
+                                if (underflow.quantity > 0 || overflow.quantity > 0) {
                                     field.gutterBuckets = {};
                                 }
-                                if (supraMinBucket.quantity > 0) {
-                                    field.gutterBuckets.min = supraMinBucket;
+                                if (underflow.quantity > 0) {
+                                    field.underflow = underflow;
                                 }
-                                if (superMaxBucket.quantity > 0) {
-                                    field.gutterBuckets.max = superMaxBucket;
+                                if (overflow.quantity > 0) {
+                                    field.overflow = overflow;
                                 }
 
                                 field.buckets = buckets;

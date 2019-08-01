@@ -115,8 +115,26 @@ export default class PngDBWriter extends PngDB {
                 if (generateBuckets) {
                     const buckets = [];
 
-                    const min = 'min' in field.buckets ? field.buckets.min : field.range.min;
-                    const max = 'max' in field.buckets ? field.buckets.max : field.range.max;
+                    let min = 'min' in field.buckets ? field.buckets.min : field.range.min;
+                    let max = 'max' in field.buckets ? field.buckets.max : field.range.max;
+
+                    /*
+                    if (!('min' in field.buckets && 'max' in field.buckets)) {
+                        let data = sortedValues[k];
+                        if ('min' in field.buckets || 'max' in field.buckets) {
+                            data =  sortedValues[k].filter(val => min <= val && max)
+                        }
+
+                        const median = data[Math.round(data.length * .5)];
+                        const mean = data.reduce((a,b) => a + b, 0) / data.length;
+
+                        console.log(median, mean, Math.abs((median - mean) / median));
+
+                        const twentyFifth = Math.round(data.length * .25);
+                        const seventyFifth = Math.round(data.length * .75);
+                    }
+                    */
+
                     const range = max - min;
                     const size = range / field.buckets.count;
 
@@ -130,14 +148,14 @@ export default class PngDBWriter extends PngDB {
                         });
                     }
 
-                    const supraMinBucket = {
+                    const underflow = {
                         quantity: 0,
                         range: {
                             min: -Infinity,
                             max: min,
                         },
                     };
-                    const superMaxBucket = {
+                    const overflow = {
                         quantity: 0,
                         range: {
                             min: max,
@@ -147,10 +165,10 @@ export default class PngDBWriter extends PngDB {
 
                     sortedValues[k].forEach(val => {
                         if (val > max) {
-                            superMaxBucket.quantity++;
+                            overflow.quantity++;
                         }
                         else if (val < min) {
-                            supraMinBucket.quantity++;
+                            underflow.quantity++;
                         }
                         else {
                             buckets.some((bucket, i) => {
@@ -168,14 +186,14 @@ export default class PngDBWriter extends PngDB {
                     // Since we aggregate i - 1 to exclude values below the min, we only needed
                     // the extra bucket for aggregating values into the actual last bucket.
                     buckets.pop();
-                    if (supraMinBucket.quantity > 0 || superMaxBucket.quantity > 0) {
+                    if (underflow.quantity > 0 || overflow.quantity > 0) {
                         field.gutterBuckets = {};
                     }
-                    if (supraMinBucket.quantity > 0) {
-                        field.gutterBuckets.min = supraMinBucket;
+                    if (underflow.quantity > 0) {
+                        field.underflow = underflow;
                     }
-                    if (superMaxBucket.quantity > 0) {
-                        field.gutterBuckets.max = superMaxBucket;
+                    if (overflow.quantity > 0) {
+                        field.overflow = overflow;
                     }
 
                     field.buckets = buckets;

@@ -1,6 +1,6 @@
 {
   "name": "png-db",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "description": "a simple database that uses PNG image compression to send large numbers of rows to the browser",
   "main": "versions/node/dist/png-db.js",
   "module": "versions/node/dist/png-db.es.js",
