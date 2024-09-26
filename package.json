@@ -22,7 +22,7 @@
     "babel-register": "^6.11.6",
     "babelrc-rollup": "^3.0.0",
     "mocha": "^3.0.2",
-    "rollup": "^0.34.7",
+    "rollup": "^2.79.2",
     "rollup-plugin-babel": "^2.6.1",
     "rollup-watch": "^2.5.0"
   },
