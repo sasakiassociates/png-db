@@ -1,10 +1,27 @@
 {
   "name": "png-db",
-  "version": "1.9.4",
+  "version": "1.9.5",
   "description": "a simple database that uses PNG image compression to send large numbers of rows to the browser",
-  "main": "versions/node/dist/png-db.js",
-  "module": "versions/node/dist/png-db.es.js",
-  "jsnext:main": "versions/node/dist/png-db.es.js",
+  "main": "./versions/node/dist/png-db.js",
+  "module": "./versions/node/dist/png-db.es.js",
+  "types": "./versions/node/dist/png-db.d.ts",
+  "jsnext:main": "./versions/node/dist/png-db.es.js",
+  "exports": {
+    ".": {
+      "types": "./versions/node/dist/png-db.d.ts",
+      "import": "./versions/node/dist/png-db.es.js",
+      "require": "./versions/node/dist/png-db.js",
+      "default": "./versions/node/dist/png-db.js"
+    },
+    "./versions/node/dist/png-db.js": {
+      "types": "./versions/node/dist/png-db.d.ts",
+      "default": "./versions/node/dist/png-db.js"
+    },
+    "./versions/node/dist/png-db.es.js": {
+      "types": "./versions/node/dist/png-db.d.ts",
+      "default": "./versions/node/dist/png-db.es.js"
+    }
+  },
   "jspm": {
     "main": "versions/client/dist/png-db.es.js"
   },
